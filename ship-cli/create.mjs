@@ -186,6 +186,14 @@ async function main() {
     }
   }
 
+  // 2b. Copy the Claude Code skill (.claude/skills/ship-method/SKILL.md) so
+  // Claude Code can explicitly invoke the SHIP workflow as a skill, not
+  // just follow it as a passive rules file.
+  const claudeSkillSrc = path.join(TEMPLATES_DIR, ".claude");
+  if (fs.existsSync(claudeSkillSrc)) {
+    copyRecursiveExcluding(claudeSkillSrc, path.join(outDir, ".claude"), new Set());
+  }
+
   // 3. Create a docs/ folder with a pre-filled PROJECT.md and the matching product-type template.
   const docsDir = path.join(outDir, "docs");
   fs.mkdirSync(docsDir, { recursive: true });
@@ -281,6 +289,11 @@ This folder includes AGENTS.md / CLAUDE.md / .cursorrules / .windsurfrules.
 If you open this folder in Cursor, Windsurf, or Claude Code, those tools
 will automatically enforce filling Structure and Human Flow before
 generating feature code — you don't need to do anything extra.
+
+If you use Claude Code specifically, there's also a \`.claude/skills/ship-method/SKILL.md\`
+— Claude can invoke it directly as a skill (not just a passive rule file)
+whenever you ask it to build a feature or review whether something is
+ready to ship.
 `;
 
   fs.writeFileSync(path.join(outDir, "NEXT_STEPS.md"), nextSteps);

@@ -21,3 +21,6 @@ yarn-error.log*
 
 # Vercel
 .vercel
+
+# Claude Code local machine settings (not shared)
+.claude/settings.local.json
