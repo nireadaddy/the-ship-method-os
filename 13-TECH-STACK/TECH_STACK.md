@@ -125,37 +125,40 @@ Output:
 
 ---
 
-## 4. Backend — Supabase
+## 4. Backend — pick a provider
 
-**What it's for:** The backend-as-a-service that gives you a database, authentication, file storage, and auto-generated APIs without writing or hosting your own server.
+**What it's for:** The database (and, for some providers, auth/storage)
+underneath your product's data layer.
 
-**Best fit for:** SaaS, CRM, dashboards, membership sites, booking systems, directories, internal tools — any product that needs to store and query user data, accounts, or permissions.
+**Default recommendation:** Supabase, unless you have a specific reason to
+pick something else (see `DB_PROVIDER_GUIDE.md` for those reasons). This OS
+supports four providers, selected once at project setup via a `DB_PROVIDER`
+env var in `starter-kit/.env` — not something you switch at runtime.
 
-**Pros:**
-- One platform covers database + auth + storage + realtime — fewer services to wire together
-- Auto-generated REST and client libraries from your schema — less hand-written backend code
-- Row Level Security (RLS) lets you enforce "who can see/edit what" at the database level, not just in app code
-- Free tier is generous enough for a real MVP
+| Provider | Bundles auth/storage? | Deploy target | Best fit |
+|---|---|---|---|
+| **Supabase** | Yes (Auth, Storage, RLS) | Anywhere (Vercel default) | Most products — one platform, generous free tier |
+| **Neon** | No — DB only | Anywhere (Vercel default) | Postgres-only projects, branching per PR/preview env |
+| **Cloudflare D1** | No — DB only | Cloudflare Workers/Pages **only** | Projects already committed to the Cloudflare edge stack |
+| **Plain Postgres** | No — DB only | Anywhere | You already have a Postgres host (Railway, self-hosted, etc.) |
 
-**Limitations:**
-- RLS policies are easy to get wrong if you don't ask AI tools to generate and explain them explicitly — a missing policy can expose data publicly
-- Not ideal for extremely complex custom backend logic (long-running jobs, heavy compute) — pair with Edge Functions or a separate worker for that
-- Vendor lock-in is moderate — migrating off Supabase later means rebuilding auth + RLS elsewhere
+Every provider gets the same Auth.js-based auth layer in `starter-kit/lib/auth.ts` and the same query layer in `starter-kit/lib/db/` (Drizzle ORM) — the provider only changes which driver gets constructed underneath.
 
-**AI Prompt — Set up a Supabase project:**
+**Read `./DB_PROVIDER_GUIDE.md` before choosing** — it covers free-tier ceilings, the concrete signal that means "you've outgrown the free tier," and the Cloudflare deploy-target constraint in detail.
+
+**AI Prompt — Set up the chosen provider:**
 ```
-Help me set up Supabase for [product name/description].
+Help me configure DB_PROVIDER=[supabase|neon|cloudflare-d1|postgres] for [product name/description], using the existing lib/db/, lib/auth.ts, and lib/storage.ts in starter-kit/.
 
-Data this product needs to store: [list entities in plain English, e.g. "users, their workspaces, projects inside workspaces, tasks inside projects"]
-Who can see/edit what: [describe access rules in plain English, e.g. "users can only see workspaces they belong to; only the workspace owner can delete it"]
+Data this product needs to store: [list entities in plain English]
+Who can see/edit what: [describe access rules in plain English]
 
 Output:
-1. A plain-English data model (one paragraph per entity, relationships explained simply)
-2. The SQL to create these tables in Supabase, with appropriate foreign keys and indexes
-3. Row Level Security (RLS) policies for every table, written out as SQL, with a plain-English explanation of what each policy actually allows/blocks
-4. A checklist of things to verify in the Supabase dashboard after running this (e.g. "confirm RLS is enabled, not just policies written")
-
-Flag explicitly if any access rule I described is ambiguous before writing the policy for it — do not guess at security rules.
+1. The filled-in .env values needed for this provider (names only — I'll supply the actual secrets)
+2. The Drizzle schema additions needed for the entities above, added to the existing lib/db/schema.pg.ts (or schema.sqlite.ts if DB_PROVIDER=cloudflare-d1)
+3. The drizzle-kit commands to generate and apply the migration
+4. If DB_PROVIDER=supabase: the Row Level Security (RLS) policies for every new table, as SQL, with a plain-English explanation of what each one allows/blocks
+5. Flag explicitly if any access rule I described is ambiguous before writing it — do not guess at security rules.
 ```
 
 ---
