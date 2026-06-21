@@ -39,6 +39,11 @@ Full reference docs live in: `01-STRUCTURE/`, `02-HUMAN-FLOW/`, `03-INSTRUCTION/
 
 6. **Never invent business facts** (market size, pricing, real metrics, real user quotes) into these docs. Draft clearly-labeled placeholders or ask the user instead.
 
+7. **Once the spec is complete, run the "Theme & First Screen" step before polishing or shipping.** When `01-STRUCTURE/PROJECT.md`, `02-HUMAN-FLOW/HUMAN_FLOW.md`, and `03-INSTRUCTION/AI_BUILD_SPEC.md` are filled (no `[bracket placeholders]`), and before calling anything ship-ready:
+   - **Theme:** Derive 2-3 theme candidates (color palette as HSL token values + a font pairing) from the business in `PROJECT.md`, present them, let the user pick one, then apply it to the app's `app/globals.css` and `app/layout.tsx` and record the choice in `12-DESIGN-SYSTEM/DESIGN_SYSTEM.md`.
+   - **Home:** Read `02-HUMAN-FLOW/HUMAN_FLOW.md`, determine the real entry point for this business, and replace the starter kit's generic `app/page.tsx` ("Pick your area") with it.
+   - Don't pick a theme silently and don't require brand assets the user didn't provide. See the `ship-method` skill's `theme-guide.md` for the business-type → palette/font reference. (In `ship-create` projects these docs live under `docs/`; in this OS repo the app lives under `starter-kit/`.)
+
 ## Quick Orientation for a New Agent Session
 
 If you (the AI agent) are opening this repo for the first time in a session:
