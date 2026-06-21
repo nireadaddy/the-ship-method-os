@@ -67,10 +67,12 @@ See [`11-STANDARDS/CONTEXT_MANAGEMENT_STANDARDS.md`](./11-STANDARDS/CONTEXT_MANA
 ## Start a New Project in One Command
 
 ```
-node ship-cli/create.mjs
+npx ship-create
 ```
 
-No `npm install`, no API key, nothing to sign up for — this is a zero-dependency script built for non-developers. It asks 3 short questions (project name, product type, which AI tool you use) and generates a ready-to-go project under `projects/<your-project>/`: a working app shell copied from `starter-kit/`, a pre-filled `docs/PROJECT.md`, the matching `06-TEMPLATES/` starter pack, a ready-to-paste first prompt, and `AGENTS.md`/`CLAUDE.md`/`.cursorrules`/`.windsurfrules` already in place. See [`ship-cli/README.md`](./ship-cli/README.md).
+Published on npm as [`ship-create`](https://www.npmjs.com/package/ship-create) — works from any empty folder, anywhere, no git clone of this (private) repo required, no API key, nothing to sign up for. It asks 3 short questions (project name, product type, which AI tool you use) and generates a ready-to-go project right there: a working app shell, a pre-filled `docs/PROJECT.md`, the matching product-type starter pack, the full prompt chain, a ready-to-paste first prompt, and `AGENTS.md`/`CLAUDE.md`/`.cursorrules`/`.windsurfrules` already in place.
+
+This package is maintained from [`ship-cli/`](./ship-cli) in this repo — see [`ship-cli/README.md`](./ship-cli/README.md) for how it's kept in sync and republished.
 
 ## Starter Kit (Working Code)
 

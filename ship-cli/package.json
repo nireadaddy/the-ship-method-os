@@ -1,0 +1,25 @@
+{
+  "name": "ship-create",
+  "version": "1.0.0",
+  "description": "Scaffold a new project the SHIP Method way — Structure, Human Flow, Instruction, Publish. No git clone, no API key, just one command.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "ship-create": "./create.mjs"
+  },
+  "files": [
+    "create.mjs",
+    "templates/**/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "scaffold",
+    "starter-kit",
+    "next.js",
+    "ai",
+    "vibe-coding",
+    "cli"
+  ]
+}

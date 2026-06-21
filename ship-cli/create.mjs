@@ -1,16 +1,22 @@
 #!/usr/bin/env node
 /**
- * SHIP CLI — zero-dependency project scaffolder for The SHIP Method OS.
+ * ship-create — zero-dependency project scaffolder for The SHIP Method OS.
  *
  * Why no npm dependencies: the audience is non-developers. Requiring
- * `npm install` before the very first command, or an API key before
+ * extra packages before the very first command, or an API key before
  * anything works, is exactly the kind of friction that loses beginners.
  * This script uses only Node.js built-ins (fs, path, readline) and pastes
  * a ready prompt for the user to run in whichever AI chat tool they
  * already use — no API key, no extra setup.
  *
  * Usage:
- *   node ship-cli/create.mjs
+ *   npx ship-create
+ *
+ * All templates this script needs (the starter-kit app, PROJECT.md,
+ * HUMAN_FLOW.md, PROMPTS.md, product-type templates, and the agent rule
+ * files) are bundled inside this package's own templates/ folder — nothing
+ * is read from outside this package, so it works standalone via npx,
+ * with no git clone required.
  */
 
 import fs from "node:fs";
@@ -20,7 +26,7 @@ import { stdin as input, stdout as output } from "node:process";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "..");
+const TEMPLATES_DIR = path.join(__dirname, "templates");
 
 const PRODUCT_TYPES = [
   { key: "SAAS", label: "SaaS product", file: "SAAS_TEMPLATE.md" },
@@ -34,7 +40,7 @@ const PRODUCT_TYPES = [
 ];
 
 const AI_TOOLS = [
-  { key: "ChatGPT", note: "Paste the prompt below into a new chat (or a Custom GPT — see 07-PROMPTS/SHIP_GPT_PROMPTS.md)." },
+  { key: "ChatGPT", note: "Paste the prompt below into a new chat (or set up a Custom GPT for repeated use)." },
   { key: "Claude", note: "Paste into a new chat, or set up a Claude Project with your docs as Project knowledge." },
   { key: "Gemini", note: "Paste into a new chat, or set up a Gemini Gem for repeated use." },
   { key: "Cursor", note: "Open PROJECT.md in the editor and reference it with @PROJECT.md instead of pasting. Use Ask/Chat mode, not Agent mode, for this step." },
@@ -103,7 +109,7 @@ function fillProjectTemplate(rawTemplate, projectName, productTypeLabel) {
     )
     .replace(
       "## 4. Target Audience",
-      `## 4. Target Audience\n\n> Product type: ${productTypeLabel}. See \`06-TEMPLATES/\` in the main repo for a starter feature checklist for this product type.`
+      `## 4. Target Audience\n\n> Product type: ${productTypeLabel}. See \`docs/${productTypeLabel}\`'s matching template file in this project for a starter feature checklist.`
     );
 }
 
@@ -135,17 +141,31 @@ async function main() {
     (t) => t.key
   );
 
-  const outDir = path.join(REPO_ROOT, "projects", projectSlug);
+  // The project is created inside whatever folder you currently have open
+  // (process.cwd()) — not inside the SHIP Method OS repo itself. This way
+  // it behaves like `npx create-next-app`: open any empty folder, run the
+  // command, get your project right there.
+  const outDir = path.join(process.cwd(), projectSlug);
   if (fs.existsSync(outDir)) {
-    console.log(`\n A folder already exists at projects/${projectSlug} — pick a different name and run again.`);
+    console.log(`\n A folder already exists at ./${projectSlug} — pick a different name and run again.`);
     rl.close();
     return;
   }
 
-  console.log(`\nCreating projects/${projectSlug} ...`);
+  console.log(`\nCreating ./${projectSlug} ...`);
 
-  // 1. Copy the working app shell (sale/member/backoffice UI on mock data).
-  const starterKitSrc = path.join(REPO_ROOT, "starter-kit");
+  // 1. Copy the working app shell (sale/member/backoffice UI on mock data)
+  // from this package's bundled templates — nothing is read from outside
+  // this package.
+  const starterKitSrc = path.join(TEMPLATES_DIR, "starter-kit");
+  if (!fs.existsSync(starterKitSrc) || !fs.existsSync(path.join(TEMPLATES_DIR, "docs"))) {
+    console.log(
+      "\nThis package's bundled templates are missing or incomplete.\n" +
+        "Try reinstalling: npx ship-create@latest\n"
+    );
+    rl.close();
+    process.exit(1);
+  }
   copyRecursiveExcluding(
     starterKitSrc,
     outDir,
@@ -160,7 +180,7 @@ async function main() {
 
   // 2. Copy the agent rule files so any coding tool enforces the SHIP order from day one.
   for (const ruleFile of ["AGENTS.md", "CLAUDE.md", ".cursorrules", ".windsurfrules"]) {
-    const src = path.join(REPO_ROOT, ruleFile);
+    const src = path.join(TEMPLATES_DIR, ruleFile);
     if (fs.existsSync(src)) {
       fs.copyFileSync(src, path.join(outDir, ruleFile));
     }
@@ -170,21 +190,27 @@ async function main() {
   const docsDir = path.join(outDir, "docs");
   fs.mkdirSync(docsDir, { recursive: true });
 
-  const projectMdSrc = path.join(REPO_ROOT, "01-STRUCTURE", "PROJECT.md");
+  const projectMdSrc = path.join(TEMPLATES_DIR, "docs", "PROJECT.md");
   const rawProjectMd = fs.readFileSync(projectMdSrc, "utf8");
   fs.writeFileSync(
     path.join(docsDir, "PROJECT.md"),
     fillProjectTemplate(rawProjectMd, projectNameRaw, productType.label)
   );
 
-  const templateSrc = path.join(REPO_ROOT, "06-TEMPLATES", productType.file);
+  const templateSrc = path.join(TEMPLATES_DIR, "docs", "product-types", productType.file);
   if (fs.existsSync(templateSrc)) {
     fs.copyFileSync(templateSrc, path.join(docsDir, productType.file));
   }
 
-  const humanFlowSrc = path.join(REPO_ROOT, "02-HUMAN-FLOW", "HUMAN_FLOW.md");
+  const humanFlowSrc = path.join(TEMPLATES_DIR, "docs", "HUMAN_FLOW.md");
   if (fs.existsSync(humanFlowSrc)) {
     fs.copyFileSync(humanFlowSrc, path.join(docsDir, "HUMAN_FLOW.md"));
+  }
+
+  // Copy the full prompt chain too, so this project is self-contained.
+  const promptsSrc = path.join(TEMPLATES_DIR, "docs", "PROMPTS.md");
+  if (fs.existsSync(promptsSrc)) {
+    fs.copyFileSync(promptsSrc, path.join(docsDir, "PROMPTS.md"));
   }
 
   // 4. Build the ready-to-paste Stage 1 prompt (Idea -> Product Spec), pre-loaded with the template.
@@ -220,7 +246,7 @@ Your AI tool: **${aiTool.key}**
 ## 1. Run the app shell (optional, do this anytime)
 
 \`\`\`
-cd projects/${projectSlug}
+cd ${projectSlug}
 npm install
 npm run dev
 \`\`\`
@@ -246,8 +272,8 @@ fill in the [raw idea] bracket, and paste the whole thing into ${aiTool.key}.
 Once \`docs/PROJECT.md\` is fully filled (no more [brackets]):
 - Move to \`docs/HUMAN_FLOW.md\` (Stage 2 in the prompt chain)
 - Reference \`docs/${productType.file}\` for feature ideas specific to a ${productType.label.toLowerCase()}
-- The full prompt chain (Stage 3-6: UX -> Tech -> Build Plan -> Code) lives
-  at the main repo's \`03-INSTRUCTION/PROMPTS.md\`
+- The full prompt chain (Stage 3-6: UX -> Tech -> Build Plan -> Code) is in
+  \`docs/PROMPTS.md\` — already copied into this project
 
 ## 5. Coding agents are already configured
 
@@ -260,11 +286,11 @@ generating feature code — you don't need to do anything extra.
   fs.writeFileSync(path.join(outDir, "NEXT_STEPS.md"), nextSteps);
 
   console.log("\nDone! Your project is ready at:");
-  console.log(`  projects/${projectSlug}/`);
+  console.log(`  ./${projectSlug}/`);
   console.log("\nOpen this file for what to do next:");
-  console.log(`  projects/${projectSlug}/NEXT_STEPS.md`);
+  console.log(`  ${projectSlug}/NEXT_STEPS.md`);
   console.log("\nOr just run:");
-  console.log(`  cat "projects/${projectSlug}/NEXT_STEPS.md"`);
+  console.log(`  cat "${projectSlug}/NEXT_STEPS.md"`);
 
   rl.close();
 }
