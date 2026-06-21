@@ -1,15 +1,16 @@
 # SHIP Starter Kit
 
-This is the code foundation for **The SHIP Method OS** — a Next.js 14 (App
+This is the code foundation for **The SHIP Method OS** — a Next.js 16 (App
 Router) + TypeScript + Tailwind CSS starter that gives every downstream agent
 a consistent, working UI shell to build on top of.
 
-It is currently **mock-data only**. There is no backend wired up — no
-Supabase, no auth, no payments. Every list, table, and metric you see is
-sourced from `lib/mock-data.ts`. That's intentional: the goal of this layer
-is a correct, consistent shared foundation (design tokens, primitives,
-layout) that other agents can build real features on without re-deciding
-button styles or color values per screen.
+It is currently **mock-data only**. Backend code (`lib/db/`, `lib/auth.ts`,
+`lib/storage.ts`) is included but has no live database connection configured
+by default. Every list, table, and metric you see is sourced from
+`lib/mock-data.ts`. That's intentional: the goal of this layer is a correct,
+consistent shared foundation (design tokens, primitives, layout) that other
+agents can build real features on without re-deciding button styles or color
+values per screen.
 
 ## Running it
 
