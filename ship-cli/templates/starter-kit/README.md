@@ -1,15 +1,16 @@
 # SHIP Starter Kit
 
-This is the code foundation for **The SHIP Method OS** — a Next.js 14 (App
+This is the code foundation for **The SHIP Method OS** — a Next.js 16 (App
 Router) + TypeScript + Tailwind CSS starter that gives every downstream agent
 a consistent, working UI shell to build on top of.
 
-It is currently **mock-data only**. There is no backend wired up — no
-Supabase, no auth, no payments. Every list, table, and metric you see is
-sourced from `lib/mock-data.ts`. That's intentional: the goal of this layer
-is a correct, consistent shared foundation (design tokens, primitives,
-layout) that other agents can build real features on without re-deciding
-button styles or color values per screen.
+It is currently **mock-data only**. Backend code (`lib/db/`, `lib/auth.ts`,
+`lib/storage.ts`) is included but has no live database connection configured
+by default. Every list, table, and metric you see is sourced from
+`lib/mock-data.ts`. That's intentional: the goal of this layer is a correct,
+consistent shared foundation (design tokens, primitives, layout) that other
+agents can build real features on without re-deciding button styles or color
+values per screen.
 
 ## Running it
 
@@ -51,14 +52,23 @@ shared primitives in `components/ui/` and the `cn()` helper in
 
 ## Next step: real data
 
-When it's time to move off mock data, replace the contents of
-`lib/mock-data.ts` (or the call sites that import from it) with real
-Supabase queries. Before doing that, read:
+This kit ships with a real, pluggable backend in `lib/db/`, `lib/auth.ts`,
+and `lib/storage.ts` — but it has no live database connection configured
+yet. To turn it on:
 
-- `../13-TECH-STACK/TECH_STACK.md` — the chosen stack and why.
-- `../03-INSTRUCTION/DATABASE_SPEC.md` — the database schema this app
-  should query against.
+1. Copy `.env.example` to `.env` and pick a `DB_PROVIDER`: `supabase`,
+   `neon`, `cloudflare-d1`, or `postgres`. Read
+   `../13-TECH-STACK/DB_PROVIDER_GUIDE.md` first if you're unsure which —
+   it covers free-tier limits and which providers can deploy where.
+2. Fill in that provider's connection details in `.env` (see the comments
+   in `.env.example`).
+3. Run `npx drizzle-kit generate` then apply the generated migration to
+   create the `user`/`account`/`session`/`verificationToken` tables.
+4. Add at least one Auth.js provider (OAuth or credentials) to the empty
+   `providers: []` array in `lib/auth.ts` — auth won't work until you do.
+5. Replace the contents of `lib/mock-data.ts` (or its call sites) with
+   real queries against `getDb()` from `lib/db`.
 
-Keep the typed interfaces (`MockUser`, `MockMemberContent`, `MockMetric`)
-as the contract — swap the data source, not the shape, unless the database
-spec requires otherwise.
+Before writing your own tables, also read
+`../03-INSTRUCTION/DATABASE_SPEC.md` for the schema-design template this
+app's data model should follow.
