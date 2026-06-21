@@ -51,14 +51,23 @@ shared primitives in `components/ui/` and the `cn()` helper in
 
 ## Next step: real data
 
-When it's time to move off mock data, replace the contents of
-`lib/mock-data.ts` (or the call sites that import from it) with real
-Supabase queries. Before doing that, read:
+This kit ships with a real, pluggable backend in `lib/db/`, `lib/auth.ts`,
+and `lib/storage.ts` — but it has no live database connection configured
+yet. To turn it on:
 
-- `../13-TECH-STACK/TECH_STACK.md` — the chosen stack and why.
-- `../03-INSTRUCTION/DATABASE_SPEC.md` — the database schema this app
-  should query against.
+1. Copy `.env.example` to `.env` and pick a `DB_PROVIDER`: `supabase`,
+   `neon`, `cloudflare-d1`, or `postgres`. Read
+   `../13-TECH-STACK/DB_PROVIDER_GUIDE.md` first if you're unsure which —
+   it covers free-tier limits and which providers can deploy where.
+2. Fill in that provider's connection details in `.env` (see the comments
+   in `.env.example`).
+3. Run `npx drizzle-kit generate` then apply the generated migration to
+   create the `user`/`account`/`session`/`verificationToken` tables.
+4. Add at least one Auth.js provider (OAuth or credentials) to the empty
+   `providers: []` array in `lib/auth.ts` — auth won't work until you do.
+5. Replace the contents of `lib/mock-data.ts` (or its call sites) with
+   real queries against `getDb()` from `lib/db`.
 
-Keep the typed interfaces (`MockUser`, `MockMemberContent`, `MockMetric`)
-as the contract — swap the data source, not the shape, unless the database
-spec requires otherwise.
+Before writing your own tables, also read
+`../03-INSTRUCTION/DATABASE_SPEC.md` for the schema-design template this
+app's data model should follow.
