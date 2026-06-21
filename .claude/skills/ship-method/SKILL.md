@@ -20,6 +20,7 @@ The single most common reason AI-built products end up broken, scope-creeped, or
 - The user asks you to generate code for a feature that doesn't have a filled spec yet
 - The user asks "is this ready to build?" or "is this ready to ship?"
 - You're about to scaffold, design a schema, or write business logic and no `PROJECT.md` / `HUMAN_FLOW.md` exists yet for it
+- The user runs the `/ship` shortcut — drive them through the gates below one phase at a time, drafting their answers into the docs
 
 ## The Checklist
 
