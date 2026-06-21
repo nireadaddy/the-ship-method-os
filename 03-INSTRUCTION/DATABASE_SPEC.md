@@ -168,24 +168,27 @@ erDiagram
 
 ## 6. Migration Strategy
 
-- **Tooling:** [e.g. Supabase CLI migrations / Prisma Migrate / Drizzle Kit / raw SQL files in `/migrations`]
-- **Naming convention:** [e.g. `YYYYMMDDHHMM_description.sql`]
+- **Tooling:** Drizzle Kit (`npx drizzle-kit generate`, then apply via your provider's apply step) — this is the default across every `DB_PROVIDER` option in `../13-TECH-STACK/DB_PROVIDER_GUIDE.md`. Schema lives in `starter-kit/lib/db/schema.pg.ts` (Supabase/Neon/plain Postgres) or `schema.sqlite.ts` (Cloudflare D1).
+- **Naming convention:** Drizzle Kit auto-generates timestamped migration file names in `starter-kit/drizzle/postgres/` or `starter-kit/drizzle/sqlite/` — don't rename them after the fact.
 - **Process:**
-  1. [Write migration locally, test against local/dev DB]
-  2. [Run migration against staging, verify with smoke test]
-  3. [Run migration against production during low-traffic window]
-  4. [Never edit a migration that has already run in any shared environment — write a new one]
-- **Rollback plan:** [e.g. every migration has a paired down-migration, or a documented manual rollback step]
-- **Breaking changes (column drops/renames):** [e.g. always do a 2-step migration: add new column → backfill → switch reads → drop old column in a later release]
+  1. Edit the relevant schema file, then run `npx drizzle-kit generate` to produce a migration.
+  2. Apply it to your dev/staging database first (Postgres-family: `npx drizzle-kit migrate`; D1: `wrangler d1 migrations apply`) and smoke-test.
+  3. Apply it to production during a low-traffic window.
+  4. Never edit a migration file that has already run in any shared environment — write a new one instead.
+- **Rollback plan:** Drizzle Kit doesn't generate down-migrations automatically — write the inverse SQL by hand and keep it alongside the migration that needs reverting, or restore from your provider's point-in-time backup if one is configured.
+- **Breaking changes (column drops/renames):** always do a 2-step migration: add the new column → backfill → switch reads → drop the old column in a later release.
 
 **Worked example:**
 ```
-Tooling: Supabase CLI (`supabase migration new`, `supabase db push`)
-Naming: 20260620_add_reminders_table.sql
-Process: local → staging (smoke test: create+dispatch a test reminder) → production
-Rollback: each migration paired with a manual DOWN script stored in /migrations/down/
-Breaking change example: renaming leads.status → leads.stage was done as
-  (1) add leads.stage, (2) backfill from status, (3) ship code reading stage,
+Tooling: Drizzle Kit, DB_PROVIDER=supabase
+Naming: drizzle-kit auto-generates e.g. drizzle/postgres/0003_add_reminders_table.sql
+Process: edit schema.pg.ts -> `npx drizzle-kit generate` -> apply to staging,
+  smoke test (create+dispatch a test reminder) -> apply to production
+Rollback: hand-written inverse SQL kept next to each migration that needs one
+Breaking change example: renaming leads.status -> leads.stage was done as
+  (1) add leads.stage column to schema.pg.ts, generate+apply,
+  (2) backfill leads.stage from leads.status,
+  (3) ship code reading stage,
   (4) drop status in a follow-up migration after 1 release cycle.
 ```
 
