@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, RotateCcw } from "lucide-react";
 
 import { products, categories, formatCurrency, type Product } from "@/lib/demo/ecommerce-data";
+import { useLocalStore } from "@/lib/demo/use-local-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,7 +20,10 @@ type CartLine = { product: Product; qty: number };
 
 export default function EcommerceDemoPage() {
   const [category, setCategory] = React.useState("All");
-  const [cart, setCart] = React.useState<CartLine[]>([]);
+  const { data: cart, setData: setCart, reset: resetCart } = useLocalStore<CartLine[]>(
+    "demo:ecommerce:cart",
+    []
+  );
   const [cartOpen, setCartOpen] = React.useState(false);
 
   const visible = products.filter((p) => category === "All" || p.category === category);
@@ -58,11 +62,17 @@ export default function EcommerceDemoPage() {
             Browse the catalog, add items, and review the cart — all with live mock state.
           </p>
         </div>
-        <Button variant="outline" onClick={() => setCartOpen(true)} className="shrink-0">
-          <ShoppingCart className="h-4 w-4" />
-          Cart
-          {cartCount > 0 && <Badge className="ml-1">{cartCount}</Badge>}
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="ghost" onClick={resetCart} title="Empty cart">
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+          <Button variant="outline" onClick={() => setCartOpen(true)}>
+            <ShoppingCart className="h-4 w-4" />
+            Cart
+            {cartCount > 0 && <Badge className="ml-1">{cartCount}</Badge>}
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

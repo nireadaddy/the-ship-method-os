@@ -11,6 +11,9 @@ import {
   type Project,
   type ProjectStatus,
 } from "@/lib/demo/saas-data";
+import { RotateCcw } from "lucide-react";
+
+import { useLocalStore } from "@/lib/demo/use-local-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -38,7 +41,10 @@ const nextStatus: Record<ProjectStatus, ProjectStatus> = {
 };
 
 export default function SaasDemoPage() {
-  const [projects, setProjects] = React.useState<Project[]>(seedProjects);
+  const { data: projects, setData: setProjects, reset } = useLocalStore<Project[]>(
+    "demo:saas:projects",
+    seedProjects
+  );
 
   function toggleStatus(id: string) {
     setProjects((prev) =>
@@ -58,9 +64,15 @@ export default function SaasDemoPage() {
             A multi-tenant app shell: usage, the core project workflow, and team management.
           </p>
         </div>
-        <Badge variant="secondary" className="shrink-0">
-          {plan.name} · renews {plan.renews}
-        </Badge>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={reset}>
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+          <Badge variant="secondary">
+            {plan.name} · renews {plan.renews}
+          </Badge>
+        </div>
       </div>
 
       <Tabs defaultValue="overview">

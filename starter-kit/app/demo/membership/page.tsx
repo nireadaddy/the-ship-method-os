@@ -1,15 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, Circle, PlayCircle, Lock } from "lucide-react";
+import { CheckCircle2, Circle, PlayCircle, Lock, RotateCcw } from "lucide-react";
 
 import { course, modules as seedModules, type Module } from "@/lib/demo/membership-data";
+import { useLocalStore } from "@/lib/demo/use-local-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function MembershipDemoPage() {
-  const [modules, setModules] = React.useState<Module[]>(seedModules);
+  const { data: modules, setData: setModules, reset } = useLocalStore<Module[]>(
+    "demo:membership:modules",
+    seedModules
+  );
 
   const allLessons = modules.flatMap((m) => m.lessons);
   const doneCount = allLessons.filter((l) => l.done).length;
@@ -42,10 +46,16 @@ export default function MembershipDemoPage() {
             Gated lessons with progress tracking — mark lessons done to watch your progress update.
           </p>
         </div>
-        <Badge variant="secondary" className="shrink-0 gap-1">
-          <Lock className="h-3 w-3" />
-          {course.tier} access
-        </Badge>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={reset}>
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+          <Badge variant="secondary" className="gap-1">
+            <Lock className="h-3 w-3" />
+            {course.tier} access
+          </Badge>
+        </div>
       </div>
 
       <Card>

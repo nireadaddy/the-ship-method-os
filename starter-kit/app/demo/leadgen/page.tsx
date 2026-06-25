@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Magnet, CheckCircle2 } from "lucide-react";
+import { Magnet, CheckCircle2, RotateCcw } from "lucide-react";
 
 import { seedLeads, funnel, sources, type Lead } from "@/lib/demo/leadgen-data";
+import { useLocalStore, newId } from "@/lib/demo/use-local-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +25,10 @@ const statusVariant: Record<Lead["status"], "default" | "secondary" | "outline">
 };
 
 export default function LeadgenDemoPage() {
-  const [leads, setLeads] = React.useState<Lead[]>(seedLeads);
+  const { data: leads, setData: setLeads, reset } = useLocalStore<Lead[]>(
+    "demo:leadgen:leads",
+    seedLeads
+  );
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [justAdded, setJustAdded] = React.useState(false);
@@ -35,7 +39,7 @@ export default function LeadgenDemoPage() {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
     setLeads((prev) => [
-      { id: `ld${prev.length + 1}-${Date.now()}`, name: name.trim(), email: email.trim(), source: "Organic", status: "New" },
+      { id: newId("ld"), name: name.trim(), email: email.trim(), source: "Organic", status: "New" },
       ...prev,
     ]);
     setName("");
@@ -46,14 +50,20 @@ export default function LeadgenDemoPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="label-mono text-accent">Lead-Gen · Demo</p>
-        <h1 className="mt-1 font-display text-3xl font-medium tracking-tight text-foreground">
-          Capture funnel
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Submit the opt-in form to drop a new lead into the pipeline, and watch the funnel below.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="label-mono text-accent">Lead-Gen · Demo</p>
+          <h1 className="mt-1 font-display text-3xl font-medium tracking-tight text-foreground">
+            Capture funnel
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Submit the opt-in form to drop a new lead into the pipeline — leads persist across refreshes.
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={reset} className="shrink-0">
+          <RotateCcw className="h-4 w-4" />
+          Reset
+        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

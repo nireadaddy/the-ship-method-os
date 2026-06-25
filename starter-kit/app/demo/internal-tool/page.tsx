@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, RotateCcw } from "lucide-react";
 
 import {
   requests as seedRequests,
@@ -10,6 +10,7 @@ import {
   type Request,
   type RequestStatus,
 } from "@/lib/demo/internal-tool-data";
+import { useLocalStore } from "@/lib/demo/use-local-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +30,10 @@ const statusVariant: Record<RequestStatus, "default" | "secondary" | "destructiv
 };
 
 export default function InternalToolDemoPage() {
-  const [requests, setRequests] = React.useState<Request[]>(seedRequests);
+  const { data: requests, setData: setRequests, reset } = useLocalStore<Request[]>(
+    "demo:internal-tool:requests",
+    seedRequests
+  );
   const [filter, setFilter] = React.useState<(typeof statusFilters)[number]>("All");
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
@@ -64,14 +68,20 @@ export default function InternalToolDemoPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="label-mono text-accent">Internal Tool · Demo</p>
-        <h1 className="mt-1 font-display text-3xl font-medium tracking-tight text-foreground">
-          Expense approvals
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Filter, select rows, and bulk-approve — the kind of fast ops tool that replaces a spreadsheet.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="label-mono text-accent">Internal Tool · Demo</p>
+          <h1 className="mt-1 font-display text-3xl font-medium tracking-tight text-foreground">
+            Expense approvals
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Filter, select rows, and bulk-approve — decisions persist across refreshes.
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={reset} className="shrink-0">
+          <RotateCcw className="h-4 w-4" />
+          Reset
+        </Button>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
