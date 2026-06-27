@@ -5,18 +5,23 @@
  * Why no npm dependencies: the audience is non-developers. Requiring
  * extra packages before the very first command, or an API key before
  * anything works, is exactly the kind of friction that loses beginners.
- * This script uses only Node.js built-ins (fs, path, readline) and pastes
- * a ready prompt for the user to run in whichever AI chat tool they
- * already use — no API key, no extra setup.
+ * This script uses only Node.js built-ins (fs, path, readline,
+ * child_process) — no API key, no extra setup.
  *
  * Usage:
  *   npx ship-create
  *
- * All templates this script needs (the starter-kit app, PROJECT.md,
- * HUMAN_FLOW.md, PROMPTS.md, product-type templates, and the agent rule
- * files) are bundled inside this package's own templates/ folder — nothing
- * is read from outside this package, so it works standalone via npx,
- * with no git clone required.
+ * All templates (starter-kit app, agent rule files, Claude skill) are
+ * bundled inside this package's own templates/ folder — nothing is read
+ * from outside, so it works standalone via npx.
+ *
+ * What changed from v1.3.1 → v1.4.0:
+ *  - Removed the AI-tool picker (no longer needed)
+ *  - Added 4 idea questions so PROJECT.md + HUMAN_FLOW.md are pre-filled
+ *    with real content (no [bracket placeholders] in the core sections)
+ *  - Runs `npm install` automatically so the project is ready to open
+ *  - End message tells the user exactly how to start building in their
+ *    AI coding tool — no intermediate manual steps
  */
 
 import fs from "node:fs";
@@ -24,28 +29,76 @@ import path from "node:path";
 import readline from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = path.join(__dirname, "templates");
 
 const PRODUCT_TYPES = [
-  { key: "SAAS", label: "SaaS product", file: "SAAS_TEMPLATE.md" },
-  { key: "CRM", label: "CRM system", file: "CRM_TEMPLATE.md" },
-  { key: "MEMBERSHIP", label: "Membership site", file: "MEMBERSHIP_TEMPLATE.md" },
-  { key: "LEADGEN", label: "Lead generation website", file: "LEADGEN_TEMPLATE.md" },
-  { key: "DIRECTORY", label: "Directory website", file: "DIRECTORY_TEMPLATE.md" },
-  { key: "DASHBOARD", label: "Dashboard / internal analytics", file: "DASHBOARD_TEMPLATE.md" },
-  { key: "INTERNAL_TOOL", label: "Internal tool", file: "INTERNAL_TOOL_TEMPLATE.md" },
-  { key: "MARKETPLACE", label: "Marketplace", file: "MARKETPLACE_TEMPLATE.md" },
+  { key: "SAAS",          label: "SaaS product",                   file: "SAAS_TEMPLATE.md" },
+  { key: "CRM",           label: "CRM system",                     file: "CRM_TEMPLATE.md" },
+  { key: "MEMBERSHIP",    label: "Membership site",                 file: "MEMBERSHIP_TEMPLATE.md" },
+  { key: "LEADGEN",       label: "Lead generation website",         file: "LEADGEN_TEMPLATE.md" },
+  { key: "DIRECTORY",     label: "Directory website",               file: "DIRECTORY_TEMPLATE.md" },
+  { key: "DASHBOARD",     label: "Dashboard / internal analytics",  file: "DASHBOARD_TEMPLATE.md" },
+  { key: "INTERNAL_TOOL", label: "Internal tool",                   file: "INTERNAL_TOOL_TEMPLATE.md" },
+  { key: "MARKETPLACE",   label: "Marketplace",                     file: "MARKETPLACE_TEMPLATE.md" },
 ];
 
-const AI_TOOLS = [
-  { key: "ChatGPT", note: "Paste the prompt below into a new chat (or set up a Custom GPT for repeated use)." },
-  { key: "Claude", note: "Paste into a new chat, or set up a Claude Project with your docs as Project knowledge." },
-  { key: "Gemini", note: "Paste into a new chat, or set up a Gemini Gem for repeated use." },
-  { key: "Cursor", note: "Open PROJECT.md in the editor and reference it with @PROJECT.md instead of pasting. Use Ask/Chat mode, not Agent mode, for this step." },
-  { key: "Windsurf", note: "Same idea as Cursor — reference PROJECT.md directly via the editor's file context instead of pasting." },
-];
+// Pre-seeded journey stages per product type so HUMAN_FLOW.md has real
+// content the moment the project is created.
+const JOURNEY_SEEDS = {
+  SAAS: {
+    discovery: "Googles a pain they have, or sees a post about the tool from someone they follow",
+    firstUse:  "Signs up, sets up their workspace, completes onboarding in under 5 minutes",
+    habitual:  "Comes back daily — it's now the default tool for this part of their work",
+    advocacy:  "Invites teammates, shares a screenshot publicly, or recommends it unprompted",
+  },
+  CRM: {
+    discovery: "Frustrated with spreadsheets or outgrowing their current CRM",
+    firstUse:  "Imports contacts, creates their first deal, moves it through the pipeline",
+    habitual:  "Logs every interaction, tracks deals from lead to close without thinking about it",
+    advocacy:  "Gets their whole sales team on it, pushes for it in team meetings",
+  },
+  MEMBERSHIP: {
+    discovery: "Finds the creator/brand through content, a recommendation, or an ad",
+    firstUse:  "Signs up for free or paid tier, accesses their first piece of content",
+    habitual:  "Returns regularly for new content and engages in the community",
+    advocacy:  "Refers friends, shares content, or upgrades to a higher tier",
+  },
+  LEADGEN: {
+    discovery: "Finds the page via search, ad, or referral while actively looking for a solution",
+    firstUse:  "Reads the page, fills out a form or books a call",
+    habitual:  "Becomes a paying customer after the follow-up sequence",
+    advocacy:  "Refers others in their network who need the same service",
+  },
+  DIRECTORY: {
+    discovery: "Searches for a specific provider or category in the niche",
+    firstUse:  "Browses listings, contacts or books a provider directly",
+    habitual:  "Returns when they need another provider, or to leave a review",
+    advocacy:  "Shares the directory with their network when someone asks for a recommendation",
+  },
+  DASHBOARD: {
+    discovery: "Team lead or ops person is tired of copy-pasting data into spreadsheets",
+    firstUse:  "Connects data sources, sees the first charts populate automatically",
+    habitual:  "Checks the dashboard every morning as the first thing in their routine",
+    advocacy:  "Shares views with stakeholders, adds more team members as viewers",
+  },
+  INTERNAL_TOOL: {
+    discovery: "Team identifies a manual, repetitive process that's slowing them down",
+    firstUse:  "First team member completes the core task in the tool, faster than before",
+    habitual:  "Whole team uses it as the default — the old process is gone",
+    advocacy:  "Other teams ask if they can get a version for their workflow too",
+  },
+  MARKETPLACE: {
+    discovery: "Buyer searches for a product or service and lands on a listing",
+    firstUse:  "Browses listings, makes first purchase or sends first inquiry",
+    habitual:  "Returns to buy again, or becomes a repeat seller",
+    advocacy:  "Refers buyers and sellers in their network",
+  },
+};
+
+// ─── helpers ────────────────────────────────────────────────────────────────
 
 function toKebabCase(str) {
   return str
@@ -55,11 +108,9 @@ function toKebabCase(str) {
     .replace(/(^-|-$)/g, "") || "my-product";
 }
 
-// Reading lines via the readline interface's async iterator (rather than
-// the higher-level `question()` API) avoids a Node.js quirk where piped /
-// redirected (non-TTY) stdin can stop delivering buffered lines after the
-// first question() call resolves. The async-iterator pattern reliably
-// delivers every line regardless of how stdin is supplied.
+// Use the readline async iterator rather than the `question()` API to avoid
+// a Node.js quirk where piped / non-TTY stdin stops delivering buffered
+// lines after the first question() call resolves.
 function makeLineReader(rl) {
   const it = rl[Symbol.asyncIterator]();
   return async function nextLine(promptText) {
@@ -101,31 +152,203 @@ function copyRecursiveExcluding(src, dest, excludeNames) {
   }
 }
 
-function fillProjectTemplate(rawTemplate, projectName, productTypeLabel) {
-  return rawTemplate
-    .replace(
-      "## 1. Product Vision",
-      `## 1. Product Vision\n\n> Project: **${projectName}** — a ${productTypeLabel}. Replace the rest of this section with your own one-paragraph vision.`
-    )
-    .replace(
-      "## 4. Target Audience",
-      `## 4. Target Audience\n\n> Product type: ${productTypeLabel}. See \`docs/${productTypeLabel}\`'s matching template file in this project for a starter feature checklist.`
-    );
+// ─── doc builders ───────────────────────────────────────────────────────────
+
+function buildProjectMd(projectName, productTypeLabel, { targetUser, problem, valueProp, idea }) {
+  return `# PROJECT.md
+
+**Phase:** S — Structure
+**Purpose:** Single source of truth for *what* you're building and *why*. Every AI build prompt should point here instead of re-explaining the product from scratch.
+
+---
+
+## 1. Product Vision
+
+${projectName} is a ${productTypeLabel.toLowerCase()} that helps **${targetUser}** ${valueProp}.
+
+> *Expand this into a fuller paragraph before moving to HUMAN_FLOW.md — what does this product become in 2 years if it succeeds?*
+
+---
+
+## 2. Problem Statement
+
+- **Who has this problem:** ${targetUser}
+- **What is the problem, specifically:** ${problem}
+- **How do they solve it today** (workarounds, competitors, spreadsheets, manual labor): [fill in]
+- **Why do existing solutions fail them:** [fill in]
+- **Cost of the problem** (time, money, missed opportunity, stress — quantify if possible): [fill in]
+
+---
+
+## 3. Opportunity
+
+- **Why now** (market shift, new tech, behavior change, AI cost drop, etc.): [fill in]
+- **Market size / addressable audience** (rough is fine): [fill in]
+- **Unfair advantage** (your access, audience, data, speed, niche knowledge): [fill in]
+- **Why AI makes this newly buildable by you, solo or with a small team:** [fill in]
+
+---
+
+## 4. Target Audience
+
+| Attribute | Description |
+|---|---|
+| Primary segment | ${targetUser} |
+| Secondary segment | [fill in] |
+| Demographics / firmographics | [fill in] |
+| Where they hang out (channels) | [fill in] |
+| What they currently pay for adjacent solutions | [fill in] |
+| Buying trigger (what makes them search for this *today*) | [fill in] |
+
+---
+
+## 5. User Personas
+
+### Persona 1: Primary User
+- **Goal:** ${valueProp}
+- **Frustration:** ${problem}
+- **Tech comfort level:** [fill in]
+- **Quote that sounds like them:** "[fill in]"
+- **What "success" looks like for them in this product:** [fill in]
+
+---
+
+## 6. MVP Scope
+
+> Smallest version that delivers real value to Persona 1. 3–5 features max.
+
+- [fill in]
+- [fill in]
+- [fill in]
+
+### Out of scope for MVP
+- [fill in — things you explicitly will NOT build yet]
+
+---
+
+## 7. Success Metrics
+
+| Metric | Target (Month 1) | Target (Month 3) |
+|---|---|---|
+| [fill in] | | |
+
+---
+
+## 8. Revenue Model
+
+- **Pricing model:** [subscription / one-time / freemium / marketplace fee / etc.]
+- **Price point:** [fill in]
+- **Revenue goal (Month 3):** [fill in]
+
+---
+
+## 9. Original Idea (keep for reference)
+
+> *Your words from when you scaffolded this project.*
+
+${idea || "(not provided)"}
+`;
 }
+
+function buildHumanFlowMd(projectName, productType, { targetUser, problem, valueProp }) {
+  const seed = JOURNEY_SEEDS[productType.key] || JOURNEY_SEEDS.SAAS;
+
+  return `# HUMAN_FLOW.md
+
+**Phase:** H — Human Flow
+**Purpose:** Maps how a real ${targetUser} moves through ${projectName} — screen by screen, decision by decision — before any code is written. Skipping this is the #1 reason AI-generated apps feel disjointed.
+
+---
+
+## 1. User Journey
+
+| Stage | What the user is trying to do | Where they are emotionally |
+|---|---|---|
+| Discovery | ${seed.discovery} | Curious but skeptical — "does this actually work?" |
+| First use | ${seed.firstUse} | Evaluating — will bounce at the first confusing screen |
+| Habitual use | ${seed.habitual} | Comfortable and trusting |
+| Advocacy | ${seed.advocacy} | Proud to recommend it |
+
+---
+
+## 2. User Flow — Core Task
+
+> Map the step-by-step sequence for the most important action a user takes. Fill in the blanks.
+
+\`\`\`
+[Entry point] → [Step 1: action] → [Step 2: action] → [Decision point?]
+                                                          ├─ Yes → [Step 3a]
+                                                          └─ No  → [Step 3b]
+→ [Outcome / success state]
+\`\`\`
+
+- **Flow name:** [e.g. "New user signs up and reaches first value"]
+- **Entry point(s):** [homepage CTA / email link / referral / etc.]
+- **Steps to reach value:** [count them — every extra step is a drop-off risk]
+- **Exit points:** [where can they bail, and is that OK?]
+
+---
+
+## 3. Core Screens
+
+> One section per screen. Every screen needs a happy path and at least one error/empty state before it gets built.
+
+### Screen 1: [Name — e.g. Landing page]
+- **Purpose:** [what does the user do or decide here?]
+- **Happy path:** [what happens when everything works]
+- **Empty state:** [what the user sees on first visit with no data]
+- **Error state:** [what happens if something goes wrong]
+
+### Screen 2: [Name — e.g. Dashboard]
+- **Purpose:**
+- **Happy path:**
+- **Empty state:**
+- **Error state:**
+
+### Screen 3: [Name — e.g. Settings]
+- **Purpose:**
+- **Happy path:**
+- **Empty state:**
+- **Error state:**
+
+> Add more screens until every route in Section 4 has a matching entry here.
+
+---
+
+## 4. Information Architecture
+
+| Route | Screen name | Who can access |
+|---|---|---|
+| / | Landing / Home | Public |
+| /dashboard | Main app view | Logged-in user |
+| /settings | Account settings | Logged-in user |
+| [fill in] | | |
+
+---
+
+## 5. Key UX Decisions
+
+> Record decisions that affect the whole product so the AI agent doesn't re-litigate them each session.
+
+- Auth method: [magic link / OAuth / password — pick one]
+- Mobile-first or desktop-first: [fill in]
+- [fill in any other non-obvious decisions]
+`;
+}
+
+// ─── main ───────────────────────────────────────────────────────────────────
 
 async function main() {
   const rl = readline.createInterface({ input, terminal: false });
   const nextLine = makeLineReader(rl);
 
   console.log("===========================================");
-  console.log("  SHIP CLI — start a new project, the SHIP way");
-  console.log("===========================================");
-  console.log(
-    "\nNo API key needed. This just sets up your files and gives you a\nready-to-paste prompt for ChatGPT, Claude, Gemini, Cursor, or Windsurf.\n"
-  );
+  console.log("  SHIP CLI — scaffold your project in 60 s");
+  console.log("===========================================\n");
 
-  const projectNameRaw = await ask(nextLine, "What's your project called?", "My Product");
-  const projectSlug = toKebabCase(projectNameRaw);
+  // ── 1. Core questions ──────────────────────────────────────────────────
+  const projectNameRaw = await ask(nextLine, "Project name?", "My Product");
+  const projectSlug    = toKebabCase(projectNameRaw);
 
   const productType = await pickFromList(
     nextLine,
@@ -134,178 +357,136 @@ async function main() {
     (t) => t.label
   );
 
-  const aiTool = await pickFromList(
+  // ── 2. Idea questions (fills the docs without needing a separate AI step)
+  console.log("\n── About your idea ─────────────────────────");
+  const idea = await ask(
     nextLine,
-    "Which AI tool will you mainly use?",
-    AI_TOOLS,
-    (t) => t.key
+    "Describe it in 1-3 sentences (who it's for and what it does)",
+    ""
+  );
+  const targetUser = await ask(
+    nextLine,
+    "Who is your primary user? (e.g. 'freelance designers', 'gym owners')",
+    "small business owners"
+  );
+  const problem = await ask(
+    nextLine,
+    "What is the #1 problem they face today?",
+    ""
+  );
+  const valueProp = await ask(
+    nextLine,
+    "What makes them say 'I need this'? (the aha moment)",
+    ""
   );
 
-  // The project is created inside whatever folder you currently have open
-  // (process.cwd()) — not inside the SHIP Method OS repo itself. This way
-  // it behaves like `npx create-next-app`: open any empty folder, run the
-  // command, get your project right there.
+  // Close readline before any child processes touch stdin
+  rl.close();
+
+  // ── 3. Guard: don't overwrite an existing folder ───────────────────────
   const outDir = path.join(process.cwd(), projectSlug);
   if (fs.existsSync(outDir)) {
-    console.log(`\n A folder already exists at ./${projectSlug} — pick a different name and run again.`);
-    rl.close();
-    return;
-  }
-
-  console.log(`\nCreating ./${projectSlug} ...`);
-
-  // 1. Copy the working app shell (sale/member/backoffice UI on mock data)
-  // from this package's bundled templates — nothing is read from outside
-  // this package.
-  const starterKitSrc = path.join(TEMPLATES_DIR, "starter-kit");
-  if (!fs.existsSync(starterKitSrc) || !fs.existsSync(path.join(TEMPLATES_DIR, "docs"))) {
-    console.log(
-      "\nThis package's bundled templates are missing or incomplete.\n" +
-        "Try reinstalling: npx ship-create@latest\n"
-    );
-    rl.close();
+    console.log(`\n  Folder ./${projectSlug} already exists — pick a different name and run again.`);
     process.exit(1);
   }
+
+  console.log(`\nScaffolding ./${projectSlug} ...`);
+
+  const starterKitSrc = path.join(TEMPLATES_DIR, "starter-kit");
+  if (!fs.existsSync(starterKitSrc) || !fs.existsSync(path.join(TEMPLATES_DIR, "docs"))) {
+    console.log("\nBundled templates missing. Try: npx ship-create@latest\n");
+    process.exit(1);
+  }
+
+  // ── 4. Copy app shell ──────────────────────────────────────────────────
   copyRecursiveExcluding(
     starterKitSrc,
     outDir,
-    new Set([
-      "node_modules",
-      ".next",
-      "package-lock.json",
-      "next-env.d.ts",
-      "tsconfig.tsbuildinfo",
-    ])
+    new Set(["node_modules", ".next", "package-lock.json", "next-env.d.ts", "tsconfig.tsbuildinfo"])
   );
 
-  // 2. Copy the agent rule files so any coding tool enforces the SHIP order from day one.
+  // ── 5. Copy agent rule files (CLAUDE.md, AGENTS.md, .cursorrules, etc.)
   for (const ruleFile of ["AGENTS.md", "CLAUDE.md", ".cursorrules", ".windsurfrules"]) {
     const src = path.join(TEMPLATES_DIR, ruleFile);
-    if (fs.existsSync(src)) {
-      fs.copyFileSync(src, path.join(outDir, ruleFile));
-    }
+    if (fs.existsSync(src)) fs.copyFileSync(src, path.join(outDir, ruleFile));
   }
 
-  // 2b. Copy the Claude Code skill (.claude/skills/ship-method/SKILL.md) so
-  // Claude Code can explicitly invoke the SHIP workflow as a skill, not
-  // just follow it as a passive rules file.
+  // ── 6. Copy Claude Code skill so agents can invoke it as a skill ───────
   const claudeSkillSrc = path.join(TEMPLATES_DIR, ".claude");
   if (fs.existsSync(claudeSkillSrc)) {
     copyRecursiveExcluding(claudeSkillSrc, path.join(outDir, ".claude"), new Set());
   }
 
-  // 3. Create a docs/ folder with a pre-filled PROJECT.md and the matching product-type template.
+  // ── 7. Write pre-filled docs (no bracket placeholders in core sections)
   const docsDir = path.join(outDir, "docs");
   fs.mkdirSync(docsDir, { recursive: true });
 
-  const projectMdSrc = path.join(TEMPLATES_DIR, "docs", "PROJECT.md");
-  const rawProjectMd = fs.readFileSync(projectMdSrc, "utf8");
   fs.writeFileSync(
     path.join(docsDir, "PROJECT.md"),
-    fillProjectTemplate(rawProjectMd, projectNameRaw, productType.label)
+    buildProjectMd(projectNameRaw, productType.label, { targetUser, problem, valueProp, idea })
   );
 
+  fs.writeFileSync(
+    path.join(docsDir, "HUMAN_FLOW.md"),
+    buildHumanFlowMd(projectNameRaw, productType, { targetUser, problem, valueProp })
+  );
+
+  // Product-type feature checklist
   const templateSrc = path.join(TEMPLATES_DIR, "docs", "product-types", productType.file);
   if (fs.existsSync(templateSrc)) {
     fs.copyFileSync(templateSrc, path.join(docsDir, productType.file));
   }
 
-  const humanFlowSrc = path.join(TEMPLATES_DIR, "docs", "HUMAN_FLOW.md");
-  if (fs.existsSync(humanFlowSrc)) {
-    fs.copyFileSync(humanFlowSrc, path.join(docsDir, "HUMAN_FLOW.md"));
-  }
-
-  // Copy the full prompt chain too, so this project is self-contained.
+  // Full prompt chain (Stages 3-6) for users who want it
   const promptsSrc = path.join(TEMPLATES_DIR, "docs", "PROMPTS.md");
   if (fs.existsSync(promptsSrc)) {
     fs.copyFileSync(promptsSrc, path.join(docsDir, "PROMPTS.md"));
   }
 
-  // 4. Build the ready-to-paste Stage 1 prompt (Idea -> Product Spec), pre-loaded with the template.
-  const prompt = `You are helping me turn a raw product idea into a structured product spec.
+  // Tech-stack reference — agent reads this when making stack decisions.
+  const techStackSrc = path.join(TEMPLATES_DIR, "docs", "tech-stack");
+  if (fs.existsSync(techStackSrc)) {
+    copyRecursiveExcluding(techStackSrc, path.join(docsDir, "tech-stack"), new Set());
+  }
 
-My raw idea: [describe your idea in 2-5 sentences — audience, problem, what you imagine building]
+  // Design system + spec templates — filled by /build after user picks theme/font/trend.
+  for (const f of ["DESIGN_SYSTEM.md", "DESIGN_SPEC.md"]) {
+    const src = path.join(TEMPLATES_DIR, "docs", f);
+    if (fs.existsSync(src)) fs.copyFileSync(src, path.join(docsDir, f));
+  }
 
-I'm building a ${productType.label.toLowerCase()} called "${projectNameRaw}".
+  // ── 8. npm install ─────────────────────────────────────────────────────
+  console.log("\nInstalling packages (this takes ~30 seconds)...");
+  const install = spawnSync("npm", ["install"], {
+    cwd: outDir,
+    stdio: "inherit",
+    shell: true,
+  });
+  if (install.status !== 0) {
+    console.log(`\n  npm install failed. Run it manually:\n  cd ${projectSlug} && npm install`);
+  }
 
-I want you to fill out the following template completely. Do not skip
-sections. If you don't have enough information for a section, ask me a
-specific clarifying question instead of writing a generic placeholder.
+  // ── 9. Done ────────────────────────────────────────────────────────────
+  console.log(`
+Done! Your project is at: ./${projectSlug}/
 
-Push back on weak answers — if my problem statement is vague ("things are
-hard"), ask me to quantify it. If my target audience is "everyone," force me
-to pick a primary segment.
+  docs/PROJECT.md                           — product spec (pre-filled)
+  docs/HUMAN_FLOW.md                        — UX flow (pre-filled)
+  docs/DESIGN_SYSTEM.md                     — design tokens & decisions (filled by /build)
+  docs/DESIGN_SPEC.md                       — screen-by-screen design spec (filled by /build)
+  docs/tech-stack/STACK_DECISION_MATRIX.md  — stack choices reference
 
-Here is the template to fill:
+── Open in your AI coding tool and type /build ─────────────────
 
-${rawProjectMd}
+  Claude Code  →  claude ./${projectSlug}
+  Cursor       →  cursor ./${projectSlug}
+  Windsurf     →  windsurf ./${projectSlug}
 
-Output the completed template in the same markdown format, ready to save
-back into docs/PROJECT.md.`;
+Then type:  /build
 
-  fs.writeFileSync(path.join(docsDir, "FIRST_PROMPT.txt"), prompt);
-
-  const toolNote = aiTool.note;
-  const nextSteps = `# Next Steps for ${projectNameRaw}
-
-You're building: **${productType.label}**
-Your AI tool: **${aiTool.key}**
-
-## 1. Run the app shell (optional, do this anytime)
-
-\`\`\`
-cd ${projectSlug}
-npm install
-npm run dev
-\`\`\`
-
-Then open http://localhost:3000 — you'll see the sale page, member area, and
-backoffice already wired up with placeholder/mock data.
-
-## 2. Fill in your product spec (do this first, before changing code)
-
-Open \`docs/PROJECT.md\`. It's pre-filled with your project name and product
-type. Fill in sections 1-2 (Vision, Problem Statement) yourself, by hand —
-this is the thinking only you can do.
-
-## 3. Let AI fill in the rest
-
-${toolNote}
-
-The exact prompt to paste is saved in \`docs/FIRST_PROMPT.txt\` — open it,
-fill in the [raw idea] bracket, and paste the whole thing into ${aiTool.key}.
-
-## 4. Keep going
-
-Once \`docs/PROJECT.md\` is fully filled (no more [brackets]):
-- Move to \`docs/HUMAN_FLOW.md\` (Stage 2 in the prompt chain)
-- Reference \`docs/${productType.file}\` for feature ideas specific to a ${productType.label.toLowerCase()}
-- The full prompt chain (Stage 3-6: UX -> Tech -> Build Plan -> Code) is in
-  \`docs/PROMPTS.md\` — already copied into this project
-
-## 5. Coding agents are already configured
-
-This folder includes AGENTS.md / CLAUDE.md / .cursorrules / .windsurfrules.
-If you open this folder in Cursor, Windsurf, or Claude Code, those tools
-will automatically enforce filling Structure and Human Flow before
-generating feature code — you don't need to do anything extra.
-
-If you use Claude Code specifically, there's also a \`.claude/skills/ship-method/SKILL.md\`
-— Claude can invoke it directly as a skill (not just a passive rule file)
-whenever you ask it to build a feature or review whether something is
-ready to ship.
-`;
-
-  fs.writeFileSync(path.join(outDir, "NEXT_STEPS.md"), nextSteps);
-
-  console.log("\nDone! Your project is ready at:");
-  console.log(`  ./${projectSlug}/`);
-  console.log("\nOpen this file for what to do next:");
-  console.log(`  ${projectSlug}/NEXT_STEPS.md`);
-  console.log("\nOr just run:");
-  console.log(`  cat "${projectSlug}/NEXT_STEPS.md"`);
-
-  rl.close();
+The agent will read your docs, create the build spec, pick a theme,
+and start coding the MVP — no copy-paste, no extra setup.
+`);
 }
 
 main().catch((err) => {
