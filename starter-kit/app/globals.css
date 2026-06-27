@@ -4,13 +4,49 @@
 
 /*
   "Ember Editorial" — the SHIP Starter Kit's 2026 visual direction.
-  A warm-ink dark theme (not slate/blue-black) with a single confident
-  ember-coral accent, replacing the generic purple-gradient-on-white default.
+  A warm-ink palette with a single confident ember-coral accent, replacing
+  the generic purple-gradient-on-white default. Ships in two modes:
+    :root  → Daylight (warm paper)
+    .dark  → Ember (warm espresso ink) — the kit's default
   Values are HSL triplets so Tailwind's hsl(var(--x)) usage works.
 */
 
 @layer base {
+  /* Daylight — warm paper, deeper ink accents for contrast on light. */
   :root {
+    --background: 39 40% 97%;      /* warm paper, not cold white */
+    --foreground: 27 25% 14%;      /* warm espresso ink */
+
+    --card: 39 45% 99%;
+    --card-foreground: 27 25% 14%;
+
+    --primary: 14 88% 52%;         /* ember coral */
+    --primary-foreground: 39 40% 98%;
+
+    --secondary: 84 30% 36%;       /* moss green, the cool counterweight */
+    --secondary-foreground: 39 40% 98%;
+
+    --accent: 38 80% 44%;          /* warm gold for highlights / eyebrow text */
+    --accent-foreground: 39 40% 98%;
+
+    --muted: 36 24% 91%;
+    --muted-foreground: 30 12% 38%;
+
+    --destructive: 6 72% 50%;
+    --destructive-foreground: 39 40% 98%;
+
+    --success: 84 38% 34%;
+    --success-foreground: 39 40% 98%;
+
+    --border: 33 20% 85%;
+    --input: 33 20% 85%;
+    --ring: 14 88% 52%;
+
+    --radius: 0.85rem;
+  }
+
+  /* Ember — the warm-ink dark mode the kit ships with by default. */
+  .dark {
     --background: 27 18% 8%;       /* warm espresso ink, not cold slate */
     --foreground: 39 38% 93%;      /* warm parchment white */
 
@@ -38,32 +74,6 @@
     --border: 27 14% 19%;
     --input: 27 14% 19%;
     --ring: 14 92% 58%;
-
-    --radius: 0.85rem;
-  }
-
-  /* .dark is identical to :root — this kit commits to one confident theme
-     rather than a light/dark toggle. Kept for component compatibility. */
-  .dark {
-    --background: 27 18% 8%;
-    --foreground: 39 38% 93%;
-    --card: 26 16% 11%;
-    --card-foreground: 39 38% 93%;
-    --primary: 14 92% 58%;
-    --primary-foreground: 27 30% 8%;
-    --secondary: 84 22% 52%;
-    --secondary-foreground: 27 30% 8%;
-    --accent: 38 78% 62%;
-    --accent-foreground: 27 30% 8%;
-    --muted: 27 14% 16%;
-    --muted-foreground: 36 16% 65%;
-    --destructive: 6 78% 58%;
-    --destructive-foreground: 39 38% 93%;
-    --success: 84 30% 48%;
-    --success-foreground: 27 30% 8%;
-    --border: 27 14% 19%;
-    --input: 27 14% 19%;
-    --ring: 14 92% 58%;
   }
 }
 
@@ -73,6 +83,10 @@
   }
 
   html {
+    color-scheme: light;
+  }
+
+  html.dark {
     color-scheme: dark;
   }
 
