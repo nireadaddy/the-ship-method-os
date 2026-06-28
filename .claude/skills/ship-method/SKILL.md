@@ -116,6 +116,16 @@ Each command picks up where the last one left off. The user types one at a time 
 - **Run the app before showing results.** Never say "done" without confirming it compiles.
 - **One question at a time.** Never give a list of options or ask multiple things at once.
 
+## Speed rules (non-negotiable)
+
+These exist because slow AI = abandoned tool. Every rule here protects response time and token cost.
+
+- **One session per phase.** After each phase completes, tell the user: "เปิด session ใหม่แล้วพิมพ์ `/[next-command]` ต่อได้เลย" / "Start a fresh session and type `/[next-command]` to continue." A new session clears context and cuts cost dramatically.
+- **No recap, no summary unless asked.** Never summarize what you just did. The user can read the diff.
+- **No verbose output.** Responses stay under 5 sentences unless writing code. Explanations are earned — default to silence.
+- **Docs stay tight.** `AI_BUILD_SPEC.md` is capped at 1 page. If the user writes more, trim it before using it as context.
+- **No subagents unless the skill explicitly requires one.** Every spawned agent doubles cost and latency.
+
 ---
 
 ## Reference files
