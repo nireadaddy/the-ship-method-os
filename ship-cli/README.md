@@ -2,7 +2,8 @@
 
 [![npm version](https://img.shields.io/npm/v/ship-create?color=0ea5e9&label=npm)](https://www.npmjs.com/package/ship-create)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org)
+[![Bun](https://img.shields.io/badge/Bun-ready-f9f1e1?logo=bun&logoColor=black)](https://bun.sh)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -46,7 +47,7 @@ Then it scaffolds everything and Claude builds your prototype automatically.
 
 A new folder `<your-project-slug>/` containing:
 
-- **Full starter-kit** — Next.js 15 app with sale page, member area, and backoffice (working code, Tailwind + shadcn/ui)
+- **Full starter-kit** — Next.js 16 app with sale page, member area, and backoffice (working code, Tailwind CSS v4 + shadcn/ui)
 - **Agent rules** — `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules` so Claude Code / Cursor / Windsurf all pick up the SHIP order automatically
 - **`docs/PROJECT.md`** — pre-filled with your product type, language, revenue model, and idea
 - **`docs/HUMAN_FLOW.md`** — screen-by-screen user journey template
@@ -88,7 +89,8 @@ Projects created with `ship-create` use this stack by default:
 
 | Layer | Tool |
 |-------|------|
-| Framework | [Next.js 15](https://nextjs.org) (App Router) |
+| Framework | [Next.js 16](https://nextjs.org) (App Router + Turbopack) |
+| Package manager | [Bun](https://bun.sh) → pnpm → npm (auto-detected) |
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS v4 + [shadcn/ui](https://ui.shadcn.com) |
 | Auth | [Clerk](https://clerk.com) (wired by `/foundation`) |
@@ -98,9 +100,30 @@ Projects created with `ship-create` use this stack by default:
 
 ---
 
+## 🏠 ship-membership — White-label Membership Backend
+
+The SHIP Method OS also includes [`ship-membership/`](https://github.com/nireadaddy/the-ship-method-os/tree/main/ship-membership) — a ready-to-deploy membership backend you can white-label for your own product. Think WordPress admin, but for your SaaS.
+
+| What | Details |
+|------|---------|
+| **Admin panel** | `/admin` — MRR, member list, content manager, settings |
+| **Member portal** | `/dashboard`, `/content`, `/billing` |
+| **Public site** | Landing page + pricing, reads from `config.ts` |
+| **Payments** | Stripe subscriptions with webhook handler |
+| **Auth** | Clerk |
+| **Config** | One file (`config.ts`) to white-label everything |
+
+AI-guided setup via slash commands:
+- `/setup` — Clerk → Supabase → Stripe → local test, step by step
+- `/go-live` — Vercel deploy → env vars → Stripe webhook → smoke test
+- `/add-content` — add gated content interactively
+- `/add-plan` — add a new Stripe plan end-to-end
+
+---
+
 ## 🔧 Maintaining This Package
 
-This folder lives inside the private `the-ship-method-os` repo but publishes as a separate public package. If the source templates change, re-sync and publish:
+This folder lives inside the `the-ship-method-os` repo but publishes as a separate public package. If the source templates change, re-sync and publish:
 
 ```bash
 # from the repo root

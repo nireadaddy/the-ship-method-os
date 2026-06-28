@@ -8,7 +8,8 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/ship-create"><img src="https://img.shields.io/npm/v/ship-create?color=0ea5e9&label=ship-create" alt="npm version"/></a>
   <a href="https://www.npmjs.com/package/ship-create"><img src="https://img.shields.io/npm/dm/ship-create?color=38bdf8&label=downloads" alt="npm downloads"/></a>
-  <img src="https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white" alt="Next.js 15"/>
+  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white" alt="Next.js 16"/>
+  <img src="https://img.shields.io/badge/Bun-ready-f9f1e1?logo=bun&logoColor=black" alt="Bun"/>
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white" alt="Node.js"/>
   <img src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white" alt="TypeScript"/>
   <img src="https://img.shields.io/badge/AI-Claude%20%7C%20GPT%20%7C%20Gemini-a855f7" alt="AI Tools"/>
@@ -28,7 +29,7 @@ From any empty folder, anywhere:
 npx ship-create
 ```
 
-No git clone. No API key. No signup. It asks 5 quick questions (arrow-key, no typing) and scaffolds a full Next.js 15 project — with your idea already in the docs, Claude Code rules pre-configured, and slash commands ready to guide you from prototype to launch.
+No git clone. No API key. No signup. It asks 5 quick questions (arrow-key, no typing) and scaffolds a full Next.js 16 project — with your idea already in the docs, Claude Code rules pre-configured, and slash commands ready to guide you from prototype to launch.
 
 ---
 
@@ -51,7 +52,7 @@ A new project folder with everything pre-wired:
 
 | What | Details |
 |------|---------|
-| **Working app shell** | Next.js 15 + Tailwind CSS v4 + shadcn/ui — sale page, member area, backoffice |
+| **Working app shell** | Next.js 16 + Tailwind CSS v4 + shadcn/ui — sale page, member area, backoffice |
 | **Docs pre-filled** | `docs/PROJECT.md` with your product type, language, revenue model, and idea |
 | **Agent rules** | `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules` — SHIP order enforced automatically |
 | **Slash commands** | `/build` → `/foundation` → `/features` → `/polish` → `/uat` → `/pentest` → `/quality` → `/launch` |
@@ -68,6 +69,29 @@ A new project folder with everything pre-wired:
 | `/pentest` | Security audit — OWASP Top 10 |
 | `/quality` | TypeScript, lint, dead code, duplication |
 | `/launch` | Deploy to Vercel, domain, analytics 🚀 |
+
+---
+
+## 🏠 ship-membership — White-label Membership Backend
+
+[`ship-membership/`](./ship-membership) is a ready-to-deploy membership backend you can white-label for your own product. Think WordPress admin, but for your SaaS — admin panel, member portal, and Stripe subscriptions in one.
+
+| Area | Route | Who uses it |
+|------|-------|-------------|
+| Public site | `/` `/pricing` | Visitors |
+| Member portal | `/dashboard` `/content` `/billing` | Paying members |
+| Admin panel | `/admin` `/admin/members` `/admin/content` | Product owner |
+
+**One file to white-label everything:** edit `config.ts` → product name, plans, content, admin IDs.
+
+**AI-guided setup** — open in Claude Code and type:
+
+| Command | What it does |
+|---------|-------------|
+| `/setup` | Clerk → Supabase → Stripe → local test, step by step |
+| `/go-live` | Vercel deploy → env vars → Stripe webhook → smoke test |
+| `/add-content` | Add gated content item interactively |
+| `/add-plan` | Add a new Stripe plan end-to-end |
 
 ---
 
@@ -99,7 +123,8 @@ Works with the tools builders actually use:
 
 | Layer | Tool |
 |-------|------|
-| Framework | [Next.js 15](https://nextjs.org) App Router |
+| Framework | [Next.js 16](https://nextjs.org) App Router + Turbopack |
+| Package manager | [Bun](https://bun.sh) → pnpm → npm (auto-detected) |
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS v4 + [shadcn/ui](https://ui.shadcn.com) |
 | Auth | [Clerk](https://clerk.com) |
@@ -113,8 +138,9 @@ Works with the tools builders actually use:
 
 ```
 THE SHIP METHOD OS/
-├── ship-cli/              npx ship-create — the scaffolder (published to npm)
-├── starter-kit/           Working Next.js app shell (sale, member, backoffice)
+├── ship-cli/              npx ship-create — scaffolder published to npm (v2.0.0)
+├── ship-membership/       White-label membership backend (admin + member + Stripe)
+├── starter-kit/           Working Next.js 16 app shell (sale, member, backoffice)
 │
 ├── 01-STRUCTURE/          S — business goals, requirements, scope
 ├── 02-HUMAN-FLOW/         H — user journeys, screens, UX flows
@@ -148,4 +174,4 @@ See [`LICENSE.md`](./LICENSE.md). Commercial product — see license terms befor
 
 ---
 
-<p align="center">Built with ❤️ — <a href="https://www.npmjs.com/package/ship-create">npm install ship-create</a></p>
+<p align="center">Built with ❤️ — <a href="https://www.npmjs.com/package/ship-create">npx ship-create</a></p>
