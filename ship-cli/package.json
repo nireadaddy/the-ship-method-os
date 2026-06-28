@@ -1,15 +1,29 @@
 {
   "name": "ship-create",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "Scaffold a new project the SHIP Method way — Structure, Human Flow, Instruction, Publish. No git clone, no API key, just one command.",
   "type": "module",
   "license": "MIT",
+  "author": {
+    "name": "nireadaddy",
+    "url": "https://github.com/nireadaddy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nireadaddy/the-ship-method-os.git",
+    "directory": "ship-cli"
+  },
+  "homepage": "https://github.com/nireadaddy/the-ship-method-os/tree/main/ship-cli#readme",
+  "bugs": {
+    "url": "https://github.com/nireadaddy/the-ship-method-os/issues"
+  },
   "bin": {
     "ship-create": "./create.mjs"
   },
   "files": [
     "create.mjs",
-    "templates/**/*"
+    "templates/**/*",
+    "README.md"
   ],
   "engines": {
     "node": ">=18"
@@ -20,6 +34,9 @@
     "next.js",
     "ai",
     "vibe-coding",
-    "cli"
+    "cli",
+    "ship-method",
+    "saas",
+    "boilerplate"
   ]
 }

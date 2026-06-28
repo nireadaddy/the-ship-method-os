@@ -10,18 +10,6 @@
  *
  * Usage:
  *   npx ship-create
- *
- * All templates (starter-kit app, agent rule files, Claude skill) are
- * bundled inside this package's own templates/ folder — nothing is read
- * from outside, so it works standalone via npx.
- *
- * What changed from v1.3.1 → v1.4.0:
- *  - Removed the AI-tool picker (no longer needed)
- *  - Added 4 idea questions so PROJECT.md + HUMAN_FLOW.md are pre-filled
- *    with real content (no [bracket placeholders] in the core sections)
- *  - Runs `npm install` automatically so the project is ready to open
- *  - End message tells the user exactly how to start building in their
- *    AI coding tool — no intermediate manual steps
  */
 
 import fs from "node:fs";
@@ -34,19 +22,115 @@ import { spawnSync } from "node:child_process";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = path.join(__dirname, "templates");
 
+// ─── ANSI helpers ────────────────────────────────────────────────────────────
+
+const C = {
+  reset:  "\x1b[0m",
+  bold:   "\x1b[1m",
+  dim:    "\x1b[2m",
+  cyan:   "\x1b[36m",
+  green:  "\x1b[32m",
+  white:  "\x1b[37m",
+  hideCursor: "\x1b[?25l",
+  showCursor: "\x1b[?25h",
+  clearLine:  "\x1b[2K",
+  up: (n) => `\x1b[${n}A`,
+};
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
 const PRODUCT_TYPES = [
-  { key: "SAAS",          label: "SaaS product",                   file: "SAAS_TEMPLATE.md" },
-  { key: "CRM",           label: "CRM system",                     file: "CRM_TEMPLATE.md" },
-  { key: "MEMBERSHIP",    label: "Membership site",                 file: "MEMBERSHIP_TEMPLATE.md" },
-  { key: "LEADGEN",       label: "Lead generation website",         file: "LEADGEN_TEMPLATE.md" },
-  { key: "DIRECTORY",     label: "Directory website",               file: "DIRECTORY_TEMPLATE.md" },
-  { key: "DASHBOARD",     label: "Dashboard / internal analytics",  file: "DASHBOARD_TEMPLATE.md" },
-  { key: "INTERNAL_TOOL", label: "Internal tool",                   file: "INTERNAL_TOOL_TEMPLATE.md" },
-  { key: "MARKETPLACE",   label: "Marketplace",                     file: "MARKETPLACE_TEMPLATE.md" },
+  { key: "SAAS",          name: "Web app / SaaS",              desc: "users sign up and use a tool online",                              file: "SAAS_TEMPLATE.md" },
+  { key: "CRM",           name: "CRM / Sales pipeline",        desc: "track leads, deals, and customers",                               file: "CRM_TEMPLATE.md" },
+  { key: "MEMBERSHIP",    name: "Membership / community",      desc: "paid access to content or a community",                           file: "MEMBERSHIP_TEMPLATE.md" },
+  { key: "LEADGEN",       name: "Landing page",                desc: "showcase a product or service — sell, capture leads, or book calls", file: "LEADGEN_TEMPLATE.md" },
+  { key: "DIRECTORY",     name: "Directory / listing site",    desc: "browse and find providers, products, or places",                  file: "DIRECTORY_TEMPLATE.md" },
+  { key: "DASHBOARD",     name: "Dashboard / analytics",       desc: "visualise data and KPIs for a team or business",                  file: "DASHBOARD_TEMPLATE.md" },
+  { key: "INTERNAL_TOOL", name: "Internal tool",               desc: "replaces a manual or spreadsheet-based process inside a company", file: "INTERNAL_TOOL_TEMPLATE.md" },
+  { key: "MARKETPLACE",   name: "Marketplace",                 desc: "connects buyers and sellers; transactions happen on the platform", file: "MARKETPLACE_TEMPLATE.md" },
 ];
 
-// Pre-seeded journey stages per product type so HUMAN_FLOW.md has real
-// content the moment the project is created.
+const LANGUAGES = [
+  { code: "en", name: "English",         desc: "UI text, labels, and copy in English" },
+  { code: "th", name: "Thai (ภาษาไทย)",  desc: "ข้อความ label และ copy ในระบบเป็นภาษาไทย" },
+];
+
+const REVENUE_MODELS = [
+  { key: "SUBSCRIPTION",  name: "Subscription",       desc: "รายเดือน / รายปี — recurring revenue",                   descEn: "monthly or annual recurring payments" },
+  { key: "ONE_TIME",      name: "One-time payment",   desc: "จ่ายครั้งเดียว เข้าถึงตลอด",                             descEn: "pay once, access forever" },
+  { key: "FREEMIUM",      name: "Freemium",           desc: "ใช้ฟรีได้ + paid tier สำหรับ feature เพิ่ม",             descEn: "free tier + paid upgrade for more features" },
+  { key: "MARKETPLACE",   name: "Marketplace fee",    desc: "เก็บ % จาก transaction ระหว่าง buyer กับ seller",        descEn: "take a % cut from each transaction" },
+  { key: "FREE",          name: "Free / not yet",     desc: "ยังไม่มี monetization ตอนนี้",                           descEn: "no monetization planned yet" },
+];
+
+const I18N = {
+  en: {
+    sectionIdea:     "── About your idea ────────────────────────────",
+    qName:           "Project name?",
+    qNameDefault:    "My Product",
+    qIdea:           "Describe it in 1–3 sentences (who it's for and what it does)",
+    qUser:           "Who is your primary user? (e.g. 'freelance designers', 'gym owners')",
+    qUserDefault:    "small business owners",
+    qProblem:        "What is the #1 problem they face today?",
+    qValue:          "What makes them say 'I need this'? (the aha moment)",
+    qRevenue:        "How will this make money?",
+    scaffolding:     (slug) => `Scaffolding ./${slug} ...`,
+    installing:      (pm) => `Installing packages with ${pm} ...`,
+    installFail:     (slug, pm) => `${pm} install failed. Run it manually:\n  cd ${slug} && ${pm} install`,
+    folderExists:    (slug) => `Folder ./${slug} already exists — pick a different name and run again.`,
+    templatesMissing:"Bundled templates missing. Try: npx ship-create@latest",
+    done:            (slug) => `
+  ✔ Done!  Your project is at ./${slug}/
+
+  docs/PROJECT.md          — product spec (pre-filled)
+  docs/HUMAN_FLOW.md       — UX flow (pre-filled)
+  docs/DESIGN_SYSTEM.md    — design tokens (filled by /build)
+
+  ──────────────────────────────────────────
+  Open in your AI coding tool and type /build
+
+  Claude Code  →  claude ./${slug}
+  Cursor       →  cursor ./${slug}
+  Windsurf     →  windsurf ./${slug}
+
+  Then type:  /build
+`,
+  },
+  th: {
+    sectionIdea:     "── เกี่ยวกับ idea ของคุณ ─────────────────────",
+    qName:           "ชื่อโปรเจค?",
+    qNameDefault:    "สินค้าของฉัน",
+    qIdea:           "อธิบายในไม่เกิน 1–3 ประโยค (สำหรับใคร และทำอะไร)",
+    qUser:           "ผู้ใช้หลักของคุณคือใคร? (เช่น 'ฟรีแลนซ์ดีไซเนอร์', 'เจ้าของยิม')",
+    qUserDefault:    "เจ้าของธุรกิจขนาดเล็ก",
+    qProblem:        "ปัญหาอันดับ 1 ที่พวกเขาเจออยู่ทุกวันคืออะไร?",
+    qValue:          "อะไรทำให้พวกเขาบอกว่า 'ฉันต้องการสิ่งนี้!'? (จุด aha moment)",
+    qRevenue:        "แผนหาเงินของโปรเจคนี้คืออะไร?",
+    scaffolding:     (slug) => `กำลัง scaffold ./${slug} ...`,
+    installing:      (pm) => `กำลังติดตั้ง packages ด้วย ${pm} ...`,
+    installFail:     (slug, pm) => `${pm} install ล้มเหลว รันเองได้ที่:\n  cd ${slug} && ${pm} install`,
+    folderExists:    (slug) => `โฟลเดอร์ ./${slug} มีอยู่แล้ว — เลือกชื่ออื่นแล้วรันใหม่`,
+    templatesMissing:"ไม่พบ template ที่ bundle ไว้ ลองรัน: npx ship-create@latest",
+    done:            (slug) => `
+  ✔ เสร็จแล้ว!  โปรเจคของคุณอยู่ที่ ./${slug}/
+
+  docs/PROJECT.md          — spec สินค้า (กรอกข้อมูลแล้ว)
+  docs/HUMAN_FLOW.md       — UX flow (กรอกข้อมูลแล้ว)
+  docs/DESIGN_SYSTEM.md    — design tokens (เติมโดย /build)
+
+  ──────────────────────────────────────────
+  เปิดใน AI coding tool แล้วพิมพ์ /build
+
+  Claude Code  →  claude ./${slug}
+  Cursor       →  cursor ./${slug}
+  Windsurf     →  windsurf ./${slug}
+
+  จากนั้นพิมพ์:  /build
+`,
+  },
+};
+
+// Pre-seeded journey stages per product type so HUMAN_FLOW.md has real content.
 const JOURNEY_SEEDS = {
   SAAS: {
     discovery: "Googles a pain they have, or sees a post about the tool from someone they follow",
@@ -98,19 +182,87 @@ const JOURNEY_SEEDS = {
   },
 };
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+// ─── Interactive selector (arrow keys) ───────────────────────────────────────
 
-function toKebabCase(str) {
-  return str
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "") || "my-product";
+function selectInteractive(title, items) {
+  return new Promise((resolve) => {
+    let idx = 0;
+
+    const printItems = () => {
+      items.forEach((item, i) => {
+        const selected = i === idx;
+        process.stdout.write(C.clearLine + "\r");
+        if (selected) {
+          process.stdout.write(
+            `  ${C.cyan}${C.bold}❯ ${item.name}${C.reset}` +
+            `  ${C.dim}${item.desc}${C.reset}\n`
+          );
+        } else {
+          process.stdout.write(`  ${C.dim}  ${item.name}${C.reset}\n`);
+        }
+      });
+      // hint line (no trailing newline so cursor stays here)
+      process.stdout.write(
+        C.clearLine + `\r  ${C.dim}↑↓ navigate  ·  Enter to select${C.reset}`
+      );
+    };
+
+    // initial render
+    process.stdout.write(`\n  ${C.bold}${title}${C.reset}\n\n`);
+    process.stdout.write(C.hideCursor);
+    printItems();
+
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.setEncoding("utf8");
+
+    const onData = (key) => {
+      if (key === "\x03") {                        // Ctrl+C
+        process.stdout.write(C.showCursor + "\n");
+        process.exit(0);
+      }
+      if (key === "\r" || key === "\n") {          // Enter
+        process.stdin.removeListener("data", onData);
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        // replace hint line with confirmed selection
+        process.stdout.write(
+          "\r" + C.clearLine +
+          `  ${C.green}${C.bold}✔ ${items[idx].name}${C.reset}\n`
+        );
+        process.stdout.write(C.showCursor);
+        resolve(items[idx]);
+        return;
+      }
+      const prev = idx;
+      if (key === "\x1b[A") idx = Math.max(0, idx - 1);           // up
+      if (key === "\x1b[B") idx = Math.min(items.length - 1, idx + 1); // down
+      if (idx !== prev) {
+        process.stdout.write(C.up(items.length));
+        printItems();
+      }
+    };
+
+    process.stdin.on("data", onData);
+  });
 }
 
-// Use the readline async iterator rather than the `question()` API to avoid
-// a Node.js quirk where piped / non-TTY stdin stops delivering buffered
-// lines after the first question() call resolves.
+// Fallback for non-TTY environments (CI, piped input)
+async function selectFallback(title, items, nextLine) {
+  console.log(`\n  ${title}`);
+  items.forEach((item, i) =>
+    console.log(`  ${i + 1}. ${item.name}  — ${item.desc}`)
+  );
+  while (true) {
+    const raw = await nextLine(`  Pick a number (1-${items.length}): `);
+    const n = parseInt(raw, 10) - 1;
+    if (n >= 0 && n < items.length) return items[n];
+    console.log("  Not a valid number, try again.");
+  }
+}
+
+// ─── Text question helper ─────────────────────────────────────────────────────
+
 function makeLineReader(rl) {
   const it = rl[Symbol.asyncIterator]();
   return async function nextLine(promptText) {
@@ -122,20 +274,10 @@ function makeLineReader(rl) {
 }
 
 async function ask(nextLine, question, defaultValue) {
-  const suffix = defaultValue ? ` (${defaultValue})` : "";
-  const answer = await nextLine(`${question}${suffix}: `);
+  const suffix = defaultValue ? `  ${C.dim}(${defaultValue})${C.reset}` : "";
+  output.write(`  ${question}${suffix}\n  ${C.cyan}›${C.reset} `);
+  const answer = await nextLine("");
   return answer || defaultValue || "";
-}
-
-async function pickFromList(nextLine, title, items, labelFn) {
-  console.log(`\n${title}`);
-  items.forEach((item, i) => console.log(`  ${i + 1}. ${labelFn(item)}`));
-  while (true) {
-    const raw = await nextLine(`Pick a number (1-${items.length}): `);
-    const idx = parseInt(raw, 10) - 1;
-    if (idx >= 0 && idx < items.length) return items[idx];
-    console.log("  Not a valid number, try again.");
-  }
 }
 
 function copyRecursiveExcluding(src, dest, excludeNames) {
@@ -152,9 +294,33 @@ function copyRecursiveExcluding(src, dest, excludeNames) {
   }
 }
 
-// ─── doc builders ───────────────────────────────────────────────────────────
+function detectPackageManager() {
+  // shell: false avoids spawning through /bin/sh — safer and avoids security scanner flags.
+  // On Windows, npm/pnpm are .cmd files so we fall back to shell:true only there.
+  const useShell = process.platform === "win32";
+  const result = spawnSync("pnpm", ["--version"], { shell: useShell, encoding: "utf8" });
+  return result.status === 0 ? "pnpm" : "npm";
+}
 
-function buildProjectMd(projectName, productTypeLabel, { targetUser, problem, valueProp, idea }) {
+function toKebabCase(str) {
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "") || "my-product";
+}
+
+// ─── Doc builders ─────────────────────────────────────────────────────────────
+
+const REVENUE_SCREENS = {
+  SUBSCRIPTION:  "Pricing page with tier comparison + Stripe subscription checkout",
+  ONE_TIME:      "Product page with one-time payment CTA + Stripe checkout",
+  FREEMIUM:      "Free vs paid tier comparison page + upgrade flow",
+  MARKETPLACE:   "Transaction page showing platform fee + seller/buyer checkout",
+  FREE:          "No payment screens needed for MVP",
+};
+
+function buildProjectMd(projectName, productTypeName, { targetUser, problem, valueProp, idea, uiLanguage, revenueModel }) {
   return `# PROJECT.md
 
 **Phase:** S — Structure
@@ -164,7 +330,7 @@ function buildProjectMd(projectName, productTypeLabel, { targetUser, problem, va
 
 ## 1. Product Vision
 
-${projectName} is a ${productTypeLabel.toLowerCase()} that helps **${targetUser}** ${valueProp}.
+${projectName} is a ${productTypeName.toLowerCase()} that helps **${targetUser}** ${valueProp}.
 
 > *Expand this into a fuller paragraph before moving to HUMAN_FLOW.md — what does this product become in 2 years if it succeeds?*
 
@@ -236,13 +402,23 @@ ${projectName} is a ${productTypeLabel.toLowerCase()} that helps **${targetUser}
 
 ## 8. Revenue Model
 
-- **Pricing model:** [subscription / one-time / freemium / marketplace fee / etc.]
+- **Pricing model:** ${revenueModel ? revenueModel.name : "[fill in]"}
+- **How it works:** ${revenueModel ? revenueModel.descEn : "[fill in]"}
+- **Revenue screen to build:** ${revenueModel ? (REVENUE_SCREENS[revenueModel.key] || "[fill in]") : "[fill in]"}
 - **Price point:** [fill in]
 - **Revenue goal (Month 3):** [fill in]
 
 ---
 
-## 9. Original Idea (keep for reference)
+## 9. Technical Decisions
+
+- **UI language:** ${uiLanguage || "English"}
+- **Auth method:** [magic link / OAuth / password — fill in]
+- **Hosting:** [Vercel / Railway / other — fill in]
+
+---
+
+## 10. Original Idea (keep for reference)
 
 > *Your words from when you scaffolded this project.*
 
@@ -336,94 +512,101 @@ function buildHumanFlowMd(projectName, productType, { targetUser, problem, value
 `;
 }
 
-// ─── main ───────────────────────────────────────────────────────────────────
+// ─── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
+  const isTTY = process.stdin.isTTY;
+
+  // ── Banner ─────────────────────────────────────────────────────────────────
+  console.log("");
+  console.log(`${C.bold}${C.cyan}  ███████╗██╗  ██╗██╗██████╗ ${C.reset}`);
+  console.log(`${C.bold}${C.cyan}  ██╔════╝██║  ██║██║██╔══██╗${C.reset}`);
+  console.log(`${C.bold}${C.cyan}  ███████╗███████║██║██████╔╝${C.reset}`);
+  console.log(`${C.bold}${C.cyan}  ╚════██║██╔══██║██║██╔═══╝ ${C.reset}`);
+  console.log(`${C.bold}${C.cyan}  ███████║██║  ██║██║██║     ${C.reset}`);
+  console.log(`${C.bold}${C.cyan}  ╚══════╝╚═╝  ╚═╝╚═╝╚═╝     ${C.reset}`);
+  console.log("");
+  console.log(`  ${C.bold}The SHIP Method${C.reset}  ${C.dim}·  scaffold your project${C.reset}`);
+  console.log(`  ${C.dim}──────────────────────────────────────────${C.reset}`);
+  console.log("");
+
+  // ── Interactive selections (no readline needed) ────────────────────────────
+  let productType, uiLanguage;
+
+  let revenueModel;
+
+  if (isTTY) {
+    productType   = await selectInteractive("What type of system are you building?", PRODUCT_TYPES);
+    uiLanguage    = await selectInteractive("UI language — what will your app display to users?", LANGUAGES);
+    revenueModel  = await selectInteractive(
+      uiLanguage.code === "th" ? "แผนหาเงินของโปรเจคนี้คืออะไร?" : "How will this make money?",
+      REVENUE_MODELS.map(r => ({ ...r, desc: uiLanguage.code === "th" ? r.desc : r.descEn }))
+    );
+  }
+
+  // ── Text questions (readline) — switch language after uiLanguage is known ──
   const rl = readline.createInterface({ input, terminal: false });
   const nextLine = makeLineReader(rl);
 
-  console.log("===========================================");
-  console.log("  SHIP CLI — scaffold your project in 60 s");
-  console.log("===========================================\n");
+  if (!isTTY) {
+    productType  = await selectFallback("What type of system are you building?", PRODUCT_TYPES, nextLine);
+    uiLanguage   = await selectFallback("UI language — what will your app display to users?", LANGUAGES, nextLine);
+    revenueModel = await selectFallback("How will this make money?", REVENUE_MODELS, nextLine);
+  }
 
-  // ── 1. Core questions ──────────────────────────────────────────────────
-  const projectNameRaw = await ask(nextLine, "Project name?", "My Product");
+  const t = I18N[uiLanguage.code] ?? I18N.en;
+
+  console.log(`\n  ${C.dim}${t.sectionIdea}${C.reset}`);
+  const projectNameRaw = await ask(nextLine, t.qName, t.qNameDefault);
   const projectSlug    = toKebabCase(projectNameRaw);
+  const idea       = await ask(nextLine, t.qIdea, "");
+  const targetUser = await ask(nextLine, t.qUser, t.qUserDefault);
+  const problem    = await ask(nextLine, t.qProblem, "");
+  const valueProp  = await ask(nextLine, t.qValue, "");
 
-  const productType = await pickFromList(
-    nextLine,
-    "What are you building?",
-    PRODUCT_TYPES,
-    (t) => t.label
-  );
-
-  // ── 2. Idea questions (fills the docs without needing a separate AI step)
-  console.log("\n── About your idea ─────────────────────────");
-  const idea = await ask(
-    nextLine,
-    "Describe it in 1-3 sentences (who it's for and what it does)",
-    ""
-  );
-  const targetUser = await ask(
-    nextLine,
-    "Who is your primary user? (e.g. 'freelance designers', 'gym owners')",
-    "small business owners"
-  );
-  const problem = await ask(
-    nextLine,
-    "What is the #1 problem they face today?",
-    ""
-  );
-  const valueProp = await ask(
-    nextLine,
-    "What makes them say 'I need this'? (the aha moment)",
-    ""
-  );
-
-  // Close readline before any child processes touch stdin
   rl.close();
 
-  // ── 3. Guard: don't overwrite an existing folder ───────────────────────
+  // ── Guard: don't overwrite an existing folder ──────────────────────────────
   const outDir = path.join(process.cwd(), projectSlug);
   if (fs.existsSync(outDir)) {
-    console.log(`\n  Folder ./${projectSlug} already exists — pick a different name and run again.`);
+    console.log(`\n  ${C.dim}${t.folderExists(projectSlug)}${C.reset}`);
     process.exit(1);
   }
 
-  console.log(`\nScaffolding ./${projectSlug} ...`);
+  console.log(`\n  ${C.dim}${t.scaffolding(projectSlug)}${C.reset}\n`);
 
   const starterKitSrc = path.join(TEMPLATES_DIR, "starter-kit");
   if (!fs.existsSync(starterKitSrc) || !fs.existsSync(path.join(TEMPLATES_DIR, "docs"))) {
-    console.log("\nBundled templates missing. Try: npx ship-create@latest\n");
+    console.log(`\n  ${t.templatesMissing}\n`);
     process.exit(1);
   }
 
-  // ── 4. Copy app shell ──────────────────────────────────────────────────
+  // ── Copy app shell ─────────────────────────────────────────────────────────
   copyRecursiveExcluding(
     starterKitSrc,
     outDir,
     new Set(["node_modules", ".next", "package-lock.json", "next-env.d.ts", "tsconfig.tsbuildinfo"])
   );
 
-  // ── 5. Copy agent rule files (CLAUDE.md, AGENTS.md, .cursorrules, etc.)
+  // ── Copy agent rule files ──────────────────────────────────────────────────
   for (const ruleFile of ["AGENTS.md", "CLAUDE.md", ".cursorrules", ".windsurfrules"]) {
     const src = path.join(TEMPLATES_DIR, ruleFile);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(outDir, ruleFile));
   }
 
-  // ── 6. Copy Claude Code skill so agents can invoke it as a skill ───────
+  // ── Copy Claude Code skill ─────────────────────────────────────────────────
   const claudeSkillSrc = path.join(TEMPLATES_DIR, ".claude");
   if (fs.existsSync(claudeSkillSrc)) {
     copyRecursiveExcluding(claudeSkillSrc, path.join(outDir, ".claude"), new Set());
   }
 
-  // ── 7. Write pre-filled docs (no bracket placeholders in core sections)
+  // ── Write pre-filled docs ──────────────────────────────────────────────────
   const docsDir = path.join(outDir, "docs");
   fs.mkdirSync(docsDir, { recursive: true });
 
   fs.writeFileSync(
     path.join(docsDir, "PROJECT.md"),
-    buildProjectMd(projectNameRaw, productType.label, { targetUser, problem, valueProp, idea })
+    buildProjectMd(projectNameRaw, productType.name, { targetUser, problem, valueProp, idea, uiLanguage: uiLanguage.name, revenueModel })
   );
 
   fs.writeFileSync(
@@ -431,65 +614,51 @@ async function main() {
     buildHumanFlowMd(projectNameRaw, productType, { targetUser, problem, valueProp })
   );
 
-  // Product-type feature checklist
   const templateSrc = path.join(TEMPLATES_DIR, "docs", "product-types", productType.file);
   if (fs.existsSync(templateSrc)) {
     fs.copyFileSync(templateSrc, path.join(docsDir, productType.file));
   }
 
-  // Full prompt chain (Stages 3-6) for users who want it
   const promptsSrc = path.join(TEMPLATES_DIR, "docs", "PROMPTS.md");
   if (fs.existsSync(promptsSrc)) {
     fs.copyFileSync(promptsSrc, path.join(docsDir, "PROMPTS.md"));
   }
 
-  // Tech-stack reference — agent reads this when making stack decisions.
   const techStackSrc = path.join(TEMPLATES_DIR, "docs", "tech-stack");
   if (fs.existsSync(techStackSrc)) {
     copyRecursiveExcluding(techStackSrc, path.join(docsDir, "tech-stack"), new Set());
   }
 
-  // Design system + spec templates — filled by /build after user picks theme/font/trend.
   for (const f of ["DESIGN_SYSTEM.md", "DESIGN_SPEC.md"]) {
     const src = path.join(TEMPLATES_DIR, "docs", f);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(docsDir, f));
   }
 
-  // ── 8. npm install ─────────────────────────────────────────────────────
-  console.log("\nInstalling packages (this takes ~30 seconds)...");
-  const install = spawnSync("npm", ["install"], {
+  // ── install ────────────────────────────────────────────────────────────────
+  const pm = detectPackageManager();
+  console.log(`  ${C.dim}${t.installing(pm)}${C.reset}\n`);
+  const useShell = process.platform === "win32";
+  const install = spawnSync(pm, ["install"], {
     cwd: outDir,
     stdio: "inherit",
-    shell: true,
+    shell: useShell,
   });
   if (install.status !== 0) {
-    console.log(`\n  npm install failed. Run it manually:\n  cd ${projectSlug} && npm install`);
+    console.log(`\n  ${t.installFail(projectSlug, pm)}`);
   }
 
-  // ── 9. Done ────────────────────────────────────────────────────────────
-  console.log(`
-Done! Your project is at: ./${projectSlug}/
-
-  docs/PROJECT.md                           — product spec (pre-filled)
-  docs/HUMAN_FLOW.md                        — UX flow (pre-filled)
-  docs/DESIGN_SYSTEM.md                     — design tokens & decisions (filled by /build)
-  docs/DESIGN_SPEC.md                       — screen-by-screen design spec (filled by /build)
-  docs/tech-stack/STACK_DECISION_MATRIX.md  — stack choices reference
-
-── Open in your AI coding tool and type /build ─────────────────
-
-  Claude Code  →  claude ./${projectSlug}
-  Cursor       →  cursor ./${projectSlug}
-  Windsurf     →  windsurf ./${projectSlug}
-
-Then type:  /build
-
-The agent will read your docs, create the build spec, pick a theme,
-and start coding the MVP — no copy-paste, no extra setup.
-`);
+  // ── Done ───────────────────────────────────────────────────────────────────
+  const doneLines = t.done(projectSlug).split("\n");
+  const styledDone = doneLines.map((line, i) => {
+    if (i === 1) return `  ${C.green}${C.bold}${line.trim()}${C.reset}`;
+    if (line.includes("/build")) return line.replace("/build", `${C.cyan}${C.bold}/build${C.reset}`);
+    return `${C.dim}${line}${C.reset}`;
+  }).join("\n");
+  console.log(styledDone);
 }
 
 main().catch((err) => {
-  console.error("\nSomething went wrong:", err.message);
+  process.stdout.write(C.showCursor);
+  console.error(`\n  ${C.dim}Something went wrong:${C.reset}`, err.message);
   process.exit(1);
 });
