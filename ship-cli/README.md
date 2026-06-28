@@ -8,7 +8,7 @@
 
 Scaffold a new product the SHIP Method way — idea → prototype in minutes. No API key, no config, no git clone. One command.
 
-![ship-create demo](demo.gif)
+![ship-create demo](https://raw.githubusercontent.com/nireadaddy/the-ship-method-os/feat/blueprint-gallery-demos/ship-cli/demo.gif)
 
 ---
 
