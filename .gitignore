@@ -24,3 +24,6 @@ yarn-error.log*
 
 # Claude Code local machine settings (not shared)
 .claude/settings.local.json
+ship-membership/.env.local
+ship-membership/node_modules/
+ship-membership/.next/

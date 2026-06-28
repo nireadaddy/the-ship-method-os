@@ -295,11 +295,11 @@ function copyRecursiveExcluding(src, dest, excludeNames) {
 }
 
 function detectPackageManager() {
-  // shell: false avoids spawning through /bin/sh — safer and avoids security scanner flags.
-  // On Windows, npm/pnpm are .cmd files so we fall back to shell:true only there.
+  // Prefer bun (fastest) → pnpm → npm. shell:true only on Windows (.cmd files).
   const useShell = process.platform === "win32";
-  const result = spawnSync("pnpm", ["--version"], { shell: useShell, encoding: "utf8" });
-  return result.status === 0 ? "pnpm" : "npm";
+  if (spawnSync("bun", ["--version"], { shell: useShell, encoding: "utf8" }).status === 0) return "bun";
+  if (spawnSync("pnpm", ["--version"], { shell: useShell, encoding: "utf8" }).status === 0) return "pnpm";
+  return "npm";
 }
 
 function toKebabCase(str) {
