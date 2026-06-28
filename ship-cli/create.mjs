@@ -582,11 +582,18 @@ async function main() {
   }
 
   // ── Copy app shell ─────────────────────────────────────────────────────────
+  // _package.json is stored with an underscore prefix so npm/socket.dev don't
+  // scan it as a real dependency manifest for this CLI package.
   copyRecursiveExcluding(
     starterKitSrc,
     outDir,
     new Set(["node_modules", ".next", "package-lock.json", "next-env.d.ts", "tsconfig.tsbuildinfo"])
   );
+  // Rename _package.json → package.json in the scaffolded project.
+  const pkgSrc = path.join(outDir, "_package.json");
+  if (fs.existsSync(pkgSrc)) {
+    fs.renameSync(pkgSrc, path.join(outDir, "package.json"));
+  }
 
   // ── Copy agent rule files ──────────────────────────────────────────────────
   for (const ruleFile of ["AGENTS.md", "CLAUDE.md", ".cursorrules", ".windsurfrules"]) {
