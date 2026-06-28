@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { PRODUCT } from "@/config";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -8,13 +9,8 @@ const inter = Inter({ subsets: ["latin"] });
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "SHIP Method — Build Products with AI",
-  description: "The complete operating system for building real products with AI. Templates, slash commands, and a framework that works.",
-  openGraph: {
-    title: "SHIP Method",
-    description: "Build real products with AI — without being a developer.",
-    type: "website",
-  },
+  title: PRODUCT.name,
+  description: PRODUCT.tagline,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

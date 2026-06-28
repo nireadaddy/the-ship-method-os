@@ -1,70 +1,75 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { ArrowRight, FileText, Terminal, Zap } from "lucide-react";
-
-const QUICK_LINKS = [
-  { href: "/templates", icon: FileText, label: "Product Templates", desc: "8 types — SaaS, CRM, Membership and more" },
-  { href: "/commands", icon: Terminal, label: "Slash Commands", desc: "/build, /foundation, /features…" },
-];
+import { ArrowRight, BookOpen, CreditCard, Zap } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth";
+import { CONTENT_ITEMS, PLANS, canAccess } from "@/config";
 
 export default async function DashboardPage() {
-  const user = await currentUser();
+  const clerkUser = await currentUser();
+  const user = await getCurrentUser();
+  const plan = user?.plan ?? "free";
+  const accessibleCount = CONTENT_ITEMS.filter((c) => canAccess(plan, c.tier)).length;
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="mb-10">
-        <h1 className="text-2xl font-bold">Welcome back{user?.firstName ? `, ${user.firstName}` : ""} 👋</h1>
-        <p className="mt-1 text-[var(--color-muted-foreground)]">Here's what you have access to on your current plan.</p>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold">Welcome{clerkUser?.firstName ? `, ${clerkUser.firstName}` : ""} 👋</h1>
+        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+          You&apos;re on the <span className="font-medium capitalize">{plan}</span> plan
+        </p>
       </div>
 
-      {/* Quick start */}
-      <section className="mb-10 rounded-2xl border border-[var(--color-border)] bg-[var(--color-secondary)] p-6">
-        <p className="mb-3 text-sm font-medium uppercase tracking-widest text-[var(--color-muted-foreground)]">Quick start</p>
-        <p className="mb-4 font-medium">Start a new project in one command:</p>
-        <code className="block rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 font-mono text-sm">
-          npx ship-create
-        </code>
-        <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
-          Then open the folder in Claude Code and type <code className="rounded bg-[var(--color-card)] px-1">/build</code>
-        </p>
-      </section>
+      {/* Stats */}
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {[
+          { label: "Your plan", value: PLANS[plan as keyof typeof PLANS]?.name ?? plan },
+          { label: "Content available", value: `${accessibleCount} / ${CONTENT_ITEMS.length}` },
+          { label: "Member since", value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-xl border border-[var(--color-border)] p-4">
+            <p className="text-xs text-[var(--color-muted-foreground)]">{s.label}</p>
+            <p className="mt-1 text-lg font-semibold capitalize">{s.value}</p>
+          </div>
+        ))}
+      </div>
 
-      {/* Resources */}
-      <section>
-        <h2 className="mb-4 font-semibold">Your resources</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {QUICK_LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="group flex items-start gap-4 rounded-xl border border-[var(--color-border)] p-5 hover:border-[var(--color-primary)] hover:bg-[var(--color-accent)]"
-            >
-              <div className="rounded-lg bg-[var(--color-secondary)] p-2 group-hover:bg-[var(--color-primary)] group-hover:text-[var(--color-primary-foreground)]">
-                <l.icon className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">{l.label}</p>
-                <p className="text-sm text-[var(--color-muted-foreground)]">{l.desc}</p>
-              </div>
-              <ArrowRight className="mt-1 h-4 w-4 text-[var(--color-muted-foreground)] transition-transform group-hover:translate-x-1" />
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* Quick links */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-2">
+        {[
+          { href: "/content", icon: BookOpen, label: "Browse Content", desc: `${accessibleCount} items available` },
+          { href: "/billing", icon: CreditCard, label: "Manage Billing", desc: "View plan & invoices" },
+        ].map((l) => (
+          <Link key={l.href} href={l.href}
+            className="group flex items-start gap-4 rounded-xl border border-[var(--color-border)] p-5 hover:border-[var(--color-primary)] hover:bg-[var(--color-accent)]">
+            <div className="rounded-lg bg-[var(--color-secondary)] p-2 group-hover:bg-[var(--color-primary)] group-hover:text-[var(--color-primary-foreground)]">
+              <l.icon className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{l.label}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">{l.desc}</p>
+            </div>
+            <ArrowRight className="mt-1 h-4 w-4 text-[var(--color-muted-foreground)] transition-transform group-hover:translate-x-1" />
+          </Link>
+        ))}
+      </div>
 
-      {/* Upgrade CTA for free users */}
-      <section className="mt-10 rounded-2xl border border-dashed border-[var(--color-primary)] bg-[var(--color-accent)] p-6">
-        <div className="flex items-start gap-4">
-          <Zap className="mt-1 h-5 w-5 shrink-0 text-[var(--color-primary)]" />
-          <div>
-            <p className="font-semibold">Unlock all 8 templates + slash commands</p>
-            <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">Upgrade to Pro and get everything you need to go from idea to live product.</p>
-            <Link href="/pricing" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)] hover:underline">
-              See Pro plan <ArrowRight className="h-3 w-3" />
-            </Link>
+      {/* Upgrade nudge for free users */}
+      {plan === "free" && (
+        <div className="rounded-2xl border border-dashed border-[var(--color-primary)] bg-[var(--color-accent)] p-6">
+          <div className="flex items-start gap-4">
+            <Zap className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-primary)]" />
+            <div>
+              <p className="font-semibold">Unlock all content</p>
+              <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                Upgrade to Pro to access {CONTENT_ITEMS.filter((c) => c.tier !== "free").length} more items.
+              </p>
+              <Link href="/billing" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)] hover:underline">
+                Upgrade now <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }

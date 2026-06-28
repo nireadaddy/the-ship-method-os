@@ -12,13 +12,11 @@
   --color-muted: oklch(0.96 0.005 260);
   --color-muted-foreground: oklch(0.52 0.01 260);
   --color-accent: oklch(0.94 0.04 264);
-  --color-accent-foreground: oklch(0.25 0.01 260);
   --color-border: oklch(0.91 0.005 260);
-  --color-input: oklch(0.91 0.005 260);
   --color-ring: oklch(0.52 0.22 264);
   --color-destructive: oklch(0.55 0.22 25);
   --color-destructive-foreground: oklch(0.99 0 0);
-
+  --color-success: oklch(0.55 0.18 145);
   --font-sans: "Inter", system-ui, sans-serif;
   --radius: 0.5rem;
 }
@@ -32,22 +30,15 @@
     --color-primary: oklch(0.64 0.22 264);
     --color-primary-foreground: oklch(0.09 0.01 260);
     --color-secondary: oklch(0.17 0.01 260);
-    --color-secondary-foreground: oklch(0.97 0.005 260);
     --color-muted: oklch(0.17 0.01 260);
     --color-muted-foreground: oklch(0.62 0.01 260);
     --color-accent: oklch(0.2 0.04 264);
-    --color-accent-foreground: oklch(0.97 0.005 260);
     --color-border: oklch(0.2 0.01 260);
-    --color-input: oklch(0.2 0.01 260);
     --color-ring: oklch(0.64 0.22 264);
-    --color-destructive: oklch(0.65 0.22 25);
-    --color-destructive-foreground: oklch(0.09 0.01 260);
   }
 }
 
-* {
-  border-color: var(--color-border);
-}
+* { border-color: var(--color-border); }
 
 body {
   background-color: var(--color-background);
