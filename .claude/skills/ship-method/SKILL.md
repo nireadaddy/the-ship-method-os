@@ -17,7 +17,15 @@ S — STRUCTURE  →  H — HUMAN FLOW  →  I — INSTRUCTION  →  P — PUBLI
 Read `docs/PROJECT.md` and `docs/HUMAN_FLOW.md`. Extract:
 - Product type, idea, target user, problem, value prop (already filled by `ship-create`)
 - UI language from Section 9 — switch language now, use it for everything after this
-- Auto-select the best theme from `theme-guide.md` for this product type — do not ask, just pick
+- Auto-select the best color palette from `theme-guide.md` for this product type — do not ask
+
+### Step 1.5 — Ask light or dark (one question, then continue)
+Ask the user one question before writing any code:
+
+> Thai: "จะใช้ธีม **Light** หรือ **Dark**? (กด Enter หรือไม่ตอบ = Light)"
+> English: "Light or Dark theme? (Press Enter or no reply = Light)"
+
+Wait for the reply. If the user does not answer within one exchange, or replies with anything that is not "dark" / "มืด" / "dark mode", treat it as **Light**. Store the choice and use it throughout Step 3.
 
 ### Step 2 — Build docs + flow diagram
 Write `docs/AI_BUILD_SPEC.md` immediately — functional requirements for the 2–3 core MVP features + data model. Keep it tight, 1 page max.
@@ -44,7 +52,12 @@ Rules for the diagram:
 - Keep node labels short (3–5 words max)
 
 ### Step 3 — Build prototype
-Generate a fresh theme from scratch based on the product type — **never reuse the default colors already in `app/globals.css`**. Overwrite the entire `:root` and `.dark` blocks with new values derived from `theme-guide.md` and the product context. Apply to `app/globals.css` and `app/layout.tsx`. Record the theme choice in `docs/DESIGN_SYSTEM.md`.
+Generate a fresh theme from scratch based on the product type — **never reuse the default colors already in `app/globals.css`**. Overwrite the entire `:root` and `.dark` blocks with new values derived from `theme-guide.md` and the product context. Apply to `app/globals.css` and `app/layout.tsx`.
+
+- If the user chose **Light** (or gave no answer): set `<html>` without `class="dark"` — light is the default mode.
+- If the user chose **Dark**: set `<html class="dark">` in `app/layout.tsx`.
+
+Record the theme choice (palette name + light/dark) in `docs/DESIGN_SYSTEM.md`.
 
 Build these screens (in priority order):
 1. **Home screen** — replace `app/page.tsx` with the real entry point from `HUMAN_FLOW.md`
@@ -98,7 +111,7 @@ Each command picks up where the last one left off. The user types one at a time 
 
 - **No task list, ever.** Build directly — tasks are invisible internal steps, not output.
 - **No questions before the prototype exists.** The only interaction before Step 5 is code being written.
-- **Theme is chosen by the agent, not the user** — pick the best fit from `theme-guide.md` and explain briefly after.
+- **Color palette is chosen by the agent** — pick the best fit from `theme-guide.md` for the product type and explain briefly after. **Light vs Dark is chosen by the user** — always ask in Step 1.5; default to Light if no answer.
 - **Never reuse starter kit colors.** Always overwrite `app/globals.css` `:root` and `.dark` completely. The default palette in the template is a placeholder — treat it as if it does not exist.
 - **Run the app before showing results.** Never say "done" without confirming it compiles.
 - **One question at a time.** Never give a list of options or ask multiple things at once.
