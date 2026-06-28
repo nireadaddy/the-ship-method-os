@@ -1,75 +1,119 @@
 ---
 name: ship-method
-description: Use when starting any new product, feature, or "build me an app" request — before writing any application code. Walks through Structure, Human Flow, Instruction, Publish in order, using this repo's templates. Also use when asked to review whether a project is "ready to build" or "ready to ship."
+description: Use when starting any new product, feature, or "build me an app" request — before writing any application code. Walks through Structure, Theme, Instruction, Publish in order, using this repo's templates. Also use when asked to review whether a project is "ready to build" or "ready to ship."
 ---
 
 # The SHIP Method
 
-You are operating inside a project built with **The SHIP Method OS**. The method has four phases, run strictly in order:
-
 ```
-S — STRUCTURE   →   H — HUMAN FLOW   →   I — INSTRUCTION   →   P — PUBLISH
-(what & why)         (the experience)     (AI-ready specs)      (ship it)
+S — STRUCTURE  →  H — HUMAN FLOW  →  I — INSTRUCTION  →  P — PUBLISH
 ```
 
-The single most common reason AI-built products end up broken, scope-creeped, or unshippable: someone skips Structure and Human Flow and goes straight to "build me an app." This skill exists to stop that.
+## Phase 1 — Build (runs automatically on first open, no prompts)
 
-## When to Use This Skill
+**Do not ask anything. Do not show a menu. Just build.**
 
-- The user describes a new product/feature idea and wants something built
-- The user asks you to generate code for a feature that doesn't have a filled spec yet
-- The user asks "is this ready to build?" or "is this ready to ship?"
-- You're about to scaffold, design a schema, or write business logic and no `PROJECT.md` / `HUMAN_FLOW.md` exists yet for it
-- The user runs the `/ship` shortcut — drive them through the gates below one phase at a time, drafting their answers into the docs
+### Step 1 — Read & decide (silent, no output)
+Read `docs/PROJECT.md` and `docs/HUMAN_FLOW.md`. Extract:
+- Product type, idea, target user, problem, value prop (already filled by `ship-create`)
+- UI language from Section 9 — switch language now, use it for everything after this
+- Auto-select the best theme from `theme-guide.md` for this product type — do not ask, just pick
 
-## The Checklist
+### Step 2 — Build docs + flow diagram
+Write `docs/AI_BUILD_SPEC.md` immediately — functional requirements for the 2–3 core MVP features + data model. Keep it tight, 1 page max.
 
-Work through these gates in order. Do not let scope, urgency, or the user saying "just build it fast" skip a gate without at least naming what's being skipped.
+Then generate `docs/FLOW.md` — a Mermaid flowchart of the full user journey from `HUMAN_FLOW.md`. Include every screen, decision point, happy path, and key error/empty states. Format:
 
-- [ ] **Gate 1 — Structure exists.** Find or create `PROJECT.md` (template: `01-STRUCTURE/PROJECT.md` in this repo, or `docs/PROJECT.md` if this is a `ship-create`-generated project). Vision, Problem Statement, Target Audience, and MVP Scope must be filled — not placeholder brackets.
-- [ ] **Gate 2 — Human Flow exists.** Find or create `HUMAN_FLOW.md`. Every core screen needs a happy path and at least one error/empty state defined before it gets built.
-- [ ] **Gate 3 — Instruction exists.** Functional requirements, data model, and API contract are written somewhere concrete (`AI_BUILD_SPEC.md` / `docs/PROJECT.md`'s feature section) before you generate feature code.
-- [ ] **Gate 4 — Theme & First Screen.** Once Gates 1-3 pass and before final polish/ship: derive 2-3 business-appropriate themes from `PROJECT.md`, let the user pick one, apply it (`app/globals.css`, `app/layout.tsx`), and record it in the design system; then read `HUMAN_FLOW.md` and replace the starter's generic `app/page.tsx` ("Pick your area") with the real entry point. See `theme-guide.md` in this skill folder.
-- [ ] **Gate 5 — Publish readiness.** Before telling the user something is "done," check it against the relevant checklist (`QA_CHECKLIST.md`, `LAUNCH_CHECKLIST.md`) rather than declaring success from a clean build alone.
+```markdown
+# User Flow
 
-## How to Apply This
+> แก้ได้โดยตรงในไฟล์นี้ — เปิด Preview ใน VS Code (Cmd+Shift+P → "Mermaid Preview") หรือวางใน https://mermaid.live
 
-1. **If Gate 1 or 2 is missing or full of `[bracket placeholders]`:** stop, don't generate feature code. Instead, ask the user one specific question at a time to fill the gap — pull questions directly from the relevant template's section headers. Scaffolding, config, and boilerplate are fine to write anytime; business logic and feature code are gated.
-2. **If the user insists on skipping a gate** ("just build it, skip the docs"): comply, but say once, briefly, what's being skipped and the most likely thing that breaks later as a result. Don't refuse repeatedly or lecture.
-3. **If all gates are filled:** proceed normally — generate code straight from the spec, and flag if a code request contradicts what's already written in `PROJECT.md` or `HUMAN_FLOW.md` rather than silently overriding it.
-4. **When asked "is this ready to build/ship?":** walk the checklist above explicitly and report which gates pass/fail, rather than giving a vague yes/no.
+```mermaid
+flowchart TD
+    ...
+```
+```
 
-## Theme & First Screen (Gate 4)
+Rules for the diagram:
+- Use `([text])` for entry/exit points (stadium shape)
+- Use `[text]` for screens/pages
+- Use `{text}` for decision points
+- Use `-->|label|` for conditional paths
+- Show the happy path left-to-right or top-to-bottom
+- Keep node labels short (3–5 words max)
 
-Run this once Gates 1-3 pass, before final polish or shipping. The agent already
-knows the business from `PROJECT.md`, so it can theme and build the front door
-accurately.
+### Step 3 — Build prototype
+Generate a fresh theme from scratch based on the product type — **never reuse the default colors already in `app/globals.css`**. Overwrite the entire `:root` and `.dark` blocks with new values derived from `theme-guide.md` and the product context. Apply to `app/globals.css` and `app/layout.tsx`. Record the theme choice in `docs/DESIGN_SYSTEM.md`.
 
-1. **Derive & choose a theme.** From `PROJECT.md`, produce 2-3 candidate themes
-   (palette as HSL token values + a font pairing). Present them and let the user
-   pick — never pick silently, never require brand assets the user didn't give.
-2. **Apply it.** Write the chosen tokens into `app/globals.css` (`:root` and
-   `.dark`), set fonts in `app/layout.tsx`, and record the choice in
-   `12-DESIGN-SYSTEM/DESIGN_SYSTEM.md` (or `docs/DESIGN_SYSTEM.md`).
-3. **Build the first screen.** Read `HUMAN_FLOW.md`, decide the real entry point
-   for this business, and replace the starter's `app/page.tsx` ("Pick your
-   area") with it — landing/sale for marketing-led products, app home/dashboard
-   redirect for tools. Adjust each area's main page to match.
+Build these screens (in priority order):
+1. **Home screen** — replace `app/page.tsx` with the real entry point from `HUMAN_FLOW.md`
+2. **Revenue screen** — read Section 8 of `PROJECT.md` for the revenue model, then build the matching screen:
+   - Subscription → pricing page with tier comparison + Stripe checkout stub
+   - One-time → product page with buy CTA + Stripe checkout stub
+   - Freemium → free vs paid tier comparison + upgrade CTA
+   - Marketplace fee → transaction page showing platform fee structure
+   - Free / not yet → skip, build the next most important screen instead
 
-Full procedure and the business-type → palette/font table: `theme-guide.md` in
-this skill folder. (In this OS repo the app lives under `starter-kit/`.)
+### Step 4 — Run
+Run `npm run dev` (or `pnpm dev` if pnpm is available). Confirm the app compiles and is accessible at localhost:3000.
 
-## Reference Files (when present in this repo)
+### Step 5 — Show & ask one question
+Tell the user (in the correct language):
+- What was built and why (2–3 sentences max)
+- Which theme was chosen and why (1 sentence)
+- Where to see the flow diagram: `docs/FLOW.md` (เปิด Preview ใน VS Code หรือ https://mermaid.live)
+- "เปิด localhost:3000 ดูได้เลย — ชอบทิศทางนี้ไหม?" (Thai) or "Open localhost:3000 — does this feel right?" (English)
+
+**That's Phase 1. Wait for the user's answer before doing anything else.**
+
+---
+
+## Phase 2 — Review (after user responds)
+
+**If the user wants changes:**
+Ask one focused question: "What feels off?" Make the adjustment, re-run, show again. Change only what they point to — do not rebuild everything.
+
+**If the user likes it:**
+Say: *"ดีมาก — ต่อไปจะ wire auth, database และ payment จริง พิมพ์ `/foundation` ได้เลย"*
+/ *"Great — next we'll wire real auth, database, and payments. Type `/foundation` to continue."*
+
+Then guide them through the full journey in order:
+
+| Command | What it does |
+|---|---|
+| `/foundation` | Wire auth + database + payments |
+| `/features` | Build features one at a time from the spec |
+| `/polish` | Responsive, states, SEO, performance |
+| `/uat` | End-to-end user acceptance testing (happy path, edge cases, mobile) |
+| `/pentest` | Security audit — auth, injection, data exposure, headers |
+| `/quality` | Code quality — TypeScript, lint, duplication, dead code |
+| `/launch` | Deploy to Vercel, domain, analytics, go live |
+
+Each command picks up where the last one left off. The user types one at a time — never give them all seven at once.
+
+---
+
+## Hard rules
+
+- **No task list, ever.** Build directly — tasks are invisible internal steps, not output.
+- **No questions before the prototype exists.** The only interaction before Step 5 is code being written.
+- **Theme is chosen by the agent, not the user** — pick the best fit from `theme-guide.md` and explain briefly after.
+- **Never reuse starter kit colors.** Always overwrite `app/globals.css` `:root` and `.dark` completely. The default palette in the template is a placeholder — treat it as if it does not exist.
+- **Run the app before showing results.** Never say "done" without confirming it compiles.
+- **One question at a time.** Never give a list of options or ask multiple things at once.
+
+---
+
+## Reference files
 
 | Need | File |
 |---|---|
-| Business goals, scope, MVP | `01-STRUCTURE/PROJECT.md`, `01-STRUCTURE/MVP_SCOPE.md` |
-| User journeys, screens | `02-HUMAN-FLOW/HUMAN_FLOW.md`, `02-HUMAN-FLOW/SCREEN_PLANNING.md` |
-| Specs, prompt chain | `03-INSTRUCTION/AI_BUILD_SPEC.md`, `03-INSTRUCTION/PROMPTS.md` |
-| Pre-launch checks | `04-PUBLISH/QA_CHECKLIST.md`, `04-PUBLISH/LAUNCH_CHECKLIST.md` |
-| Product-type starter pack | `06-TEMPLATES/<TYPE>_TEMPLATE.md` |
-| Design consistency | `12-DESIGN-SYSTEM/DESIGN_SYSTEM.md` |
-| Business-type → palette/font theme guide | `theme-guide.md` (this skill folder) |
-| Stack decisions | `13-TECH-STACK/STACK_DECISION_MATRIX.md` |
-
-If this is a project generated by `ship-create`, the same files exist under `docs/` instead of the numbered folders above.
+| Vision, audience, MVP | `docs/PROJECT.md` |
+| User flow, screens | `docs/HUMAN_FLOW.md` |
+| Visual flow diagram (Mermaid) | `docs/FLOW.md` |
+| Functional spec | `docs/AI_BUILD_SPEC.md` |
+| Stack choices | `docs/tech-stack/STACK_DECISION_MATRIX.md` |
+| UI guidance | invoke `ui-ux-pro-max` skill |
+| Theme palette table | `theme-guide.md` (this skill folder) |
+| QA before ship | `docs/QA_CHECKLIST.md` |
