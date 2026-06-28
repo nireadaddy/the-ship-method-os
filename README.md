@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/nireadaddy/the-ship-method-os/feat/blueprint-gallery-demos/ship-cli/demo.gif" alt="ship-create demo" width="700"/>
+  <img src="https://raw.githubusercontent.com/nireadaddy/the-ship-method-os/main/ship-cli/demo.gif" alt="ship-create demo" width="700"/>
 </p>
 
 ---
