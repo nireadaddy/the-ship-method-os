@@ -1,191 +1,151 @@
-# The SHIP Method OS
+<h1 align="center">🚢 The SHIP Method OS</h1>
 
-**A Product Operating System for AI Builders**
+<p align="center">
+  <strong>A Product Operating System for AI Builders</strong><br/>
+  Build real products with AI — without being a developer.
+</p>
 
-> Build real products with AI — without being a developer.
+<p align="center">
+  <a href="https://www.npmjs.com/package/ship-create"><img src="https://img.shields.io/npm/v/ship-create?color=0ea5e9&label=ship-create" alt="npm version"/></a>
+  <a href="https://www.npmjs.com/package/ship-create"><img src="https://img.shields.io/npm/dm/ship-create?color=38bdf8&label=downloads" alt="npm downloads"/></a>
+  <img src="https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white" alt="Next.js 15"/>
+  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white" alt="Node.js"/>
+  <img src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white" alt="TypeScript"/>
+  <img src="https://img.shields.io/badge/AI-Claude%20%7C%20GPT%20%7C%20Gemini-a855f7" alt="AI Tools"/>
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nireadaddy/the-ship-method-os/feat/blueprint-gallery-demos/ship-cli/demo.gif" alt="ship-create demo" width="700"/>
+</p>
 
 ---
 
-## What This Is
+## ⚡ Start in One Command
 
-The SHIP Method OS is a complete operating system — templates, SOPs, checklists, prompt libraries, product-type starter packs, and worked examples — for taking an idea from "I have a vague idea" to "I shipped a live product," using AI as your build partner instead of a development team.
+From any empty folder, anywhere:
 
-It is not a course. It is not generic startup advice. It is the actual scaffolding professional product teams use, rewritten for non-technical builders working with AI tools — **ChatGPT, Claude, Gemini, Cursor, and Windsurf** — organized around one repeatable framework: **SHIP**.
+```bash
+npx ship-create
+```
 
-Beginner friendly. AI friendly. Built to support SaaS products, CRM systems, membership sites, lead-generation websites, internal tools, directory websites, dashboards, and marketplace products.
+No git clone. No API key. No signup. It asks 5 quick questions (arrow-key, no typing) and scaffolds a full Next.js 15 project — with your idea already in the docs, Claude Code rules pre-configured, and slash commands ready to guide you from prototype to launch.
 
-## The SHIP Framework
+---
 
-| Letter | Phase | What You Do | Folder |
-|---|---|---|---|
-| **S** | Structure | Define business goals, requirements, scope, constraints, priorities — before building anything | [`01-STRUCTURE/`](./01-STRUCTURE) |
-| **H** | Human Flow | Design user journeys, workflows, screens, and experiences — before generating code | [`02-HUMAN-FLOW/`](./02-HUMAN-FLOW) |
-| **I** | Instruction | Turn flows into AI-ready specs, prompts, and implementation plans the AI can build from | [`03-INSTRUCTION/`](./03-INSTRUCTION) |
-| **P** | Publish | Launch, collect feedback, iterate, scale | [`04-PUBLISH/`](./04-PUBLISH) |
+## 🧭 The SHIP Framework
 
-The core insight: **AI is an extremely fast, extremely literal builder.** It does not fail because it can't code. It fails because the human skipped Structure and Human Flow and jumped straight to "build me an app." SHIP forces the thinking to happen in the right order, in writing, before a single prompt asks AI to generate anything.
+The core insight: **AI is an extremely fast, extremely literal builder.** It fails not because it can't code — it fails because the human skips thinking and jumps straight to "build me an app." SHIP forces the right thinking to happen in writing, in the right order, before a single line of code is generated.
 
-## Who This Is For
+| Letter | Phase | What You Do |
+|--------|-------|-------------|
+| **S** | Structure | Define business goals, requirements, scope, constraints — before building anything |
+| **H** | Human Flow | Design user journeys, screens, and experiences — before generating code |
+| **I** | Instruction | Turn flows into AI-ready specs and implementation plans |
+| **P** | Publish | Launch, collect feedback, iterate, scale |
+
+---
+
+## 🛠️ What `npx ship-create` Sets Up
+
+A new project folder with everything pre-wired:
+
+| What | Details |
+|------|---------|
+| **Working app shell** | Next.js 15 + Tailwind CSS v4 + shadcn/ui — sale page, member area, backoffice |
+| **Docs pre-filled** | `docs/PROJECT.md` with your product type, language, revenue model, and idea |
+| **Agent rules** | `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules` — SHIP order enforced automatically |
+| **Slash commands** | `/build` → `/foundation` → `/features` → `/polish` → `/uat` → `/pentest` → `/quality` → `/launch` |
+
+### 🚀 Slash commands — from idea to launch
+
+| Command | What it does |
+|---------|-------------|
+| `/build` | Claude builds prototype automatically from your idea |
+| `/foundation` | Wire auth (Clerk), database (Supabase), payments (Stripe) |
+| `/features` | Build features one at a time from the spec |
+| `/polish` | Responsive, empty states, SEO, performance |
+| `/uat` | Full user acceptance testing |
+| `/pentest` | Security audit — OWASP Top 10 |
+| `/quality` | TypeScript, lint, dead code, duplication |
+| `/launch` | Deploy to Vercel, domain, analytics 🚀 |
+
+---
+
+## 🤖 AI Tool Compatibility
+
+Works with the tools builders actually use:
+
+| Tool | How it fits in |
+|------|---------------|
+| **Claude Code** | Primary build agent — reads CLAUDE.md + slash commands automatically |
+| **Cursor** | Reads `.cursorrules` on open — full SHIP spec awareness |
+| **Windsurf** | Reads `.windsurfrules` — same spec, different editor |
+| **ChatGPT / Gemini** | Doc drafting, idea refinement, prompt chain reference |
+
+---
+
+## 👥 Who This Is For
 
 - Non-technical founders building their first product
 - Product Managers who want a repeatable AI-build process
 - UX/UI Designers moving into full-stack "vibe coding"
 - Marketers and solopreneurs shipping their own tools
 - Freelancers who want a sellable, repeatable client process
-- Startup teams standardizing how they brief AI tools
 - Anyone doing "vibe coding" who wants fewer rebuilds and more ships
 
-## AI Tool Compatibility
+---
 
-Every spec and prompt in this repo is written to work across the tools builders actually use:
+## 📦 Tech Stack (per generated project)
 
-| Tool | Role in the SHIP workflow |
-|---|---|
-| **ChatGPT** | Drafting Structure/Human Flow docs, running prompt chains, Custom GPT persona ("SHIP GPT") |
-| **Claude** | Long-context spec drafting, Claude Projects as persistent knowledge base, code generation |
-| **Gemini** | Fast iteration, Gemini Gems as persistent persona, multimodal screen/wireframe review |
-| **Cursor** | Repo-aware code generation directly from `03-INSTRUCTION/` specs |
-| **Windsurf** | Repo-aware code generation + Cascade multi-file workflows from the same specs |
+| Layer | Tool |
+|-------|------|
+| Framework | [Next.js 15](https://nextjs.org) App Router |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS v4 + [shadcn/ui](https://ui.shadcn.com) |
+| Auth | [Clerk](https://clerk.com) |
+| Database | [Supabase](https://supabase.com) + Drizzle ORM |
+| Payments | [Stripe](https://stripe.com) |
+| Deploy | [Vercel](https://vercel.com) |
 
-See [`11-STANDARDS/CONTEXT_MANAGEMENT_STANDARDS.md`](./11-STANDARDS/CONTEXT_MANAGEMENT_STANDARDS.md) and [`07-PROMPTS/SHIP_GPT_PROMPTS.md`](./07-PROMPTS/SHIP_GPT_PROMPTS.md) for tool-specific setup.
+---
 
-**Zero-setup for coding agents:** this repo ships with `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, and `.windsurfrules` at the root — identical copies of [`SHIP_AGENT_RULES.md`](./SHIP_AGENT_RULES.md). Cursor, Windsurf, Claude Code, and other agent-style tools auto-load whichever file they recognize, so the SHIP order is enforced the moment you open this folder — no copy-pasting a persona prompt required. Chat-only tools (ChatGPT/Gemini web) still need the manual Custom GPT / Gem setup in `SHIP_GPT_PROMPTS.md`.
-
-## How to Use This Repository
-
-1. Start with [`START-HERE.md`](./START-HERE.md) — the 10-minute orientation.
-2. Run a new project through the four phase folders **in order**: `01-STRUCTURE` → `02-HUMAN-FLOW` → `03-INSTRUCTION` → `04-PUBLISH`.
-3. Use [`05-SOP/`](./05-SOP) to run the process as a repeatable operating rhythm (solo or with a team).
-4. If you're building a specific product type, grab its starter pack from [`06-TEMPLATES/`](./06-TEMPLATES) (CRM, membership, directory, lead-gen, dashboard, SaaS, internal tool, marketplace).
-5. Use [`07-PROMPTS/`](./07-PROMPTS) any time you need to brief an AI tool — including [`SHIP_GPT_PROMPTS.md`](./07-PROMPTS/SHIP_GPT_PROMPTS.md) to set up a persistent AI coach.
-6. Study [`08-EXAMPLES/`](./08-EXAMPLES) and [`09-CASE-STUDIES/`](./09-CASE-STUDIES) to see the whole method applied end-to-end.
-7. Use [`10-LAUNCH/`](./10-LAUNCH) when you're ready to deploy, set up your domain, and wire up analytics.
-8. Check [`11-STANDARDS/`](./11-STANDARDS) any time you're unsure how this repo expects you to name, write, version, or prompt.
-9. Use [`12-DESIGN-SYSTEM/`](./12-DESIGN-SYSTEM) before generating any UI so AI output looks consistent, not generic.
-10. Use [`13-TECH-STACK/`](./13-TECH-STACK) to pick and brief a stack before writing your `TECH_SPEC.md`.
-
-## Start a New Project in One Command
-
-```
-npx ship-create
-```
-
-Published on npm as [`ship-create`](https://www.npmjs.com/package/ship-create) — works from any empty folder, anywhere, no git clone of this (private) repo required, no API key, nothing to sign up for. It asks 3 short questions (project name, product type, which AI tool you use) and generates a ready-to-go project right there: a working app shell, a pre-filled `docs/PROJECT.md`, the matching product-type starter pack, the full prompt chain, a ready-to-paste first prompt, and `AGENTS.md`/`CLAUDE.md`/`.cursorrules`/`.windsurfrules` already in place.
-
-This package is maintained from [`ship-cli/`](./ship-cli) in this repo — see [`ship-cli/README.md`](./ship-cli/README.md) for how it's kept in sync and republished.
-
-## Starter Kit (Working Code)
-
-[`starter-kit/`](./starter-kit) is a real, runnable Next.js + Tailwind + shadcn-style app — not just docs. It ships with three working route groups on mock data, so you (or whoever you hand this to) can `npm install && npm run dev` and see a real product shell immediately:
-
-| Route | What it is |
-|---|---|
-| `/sale` | Marketing/sales landing page (hero, problem, features, pricing, testimonials, FAQ) |
-| `/member/login`, `/member/signup`, `/member/dashboard`, `/member/content`, `/member/billing`, `/member/settings` | Logged-in member area with sidebar nav |
-| `/backoffice`, `/backoffice/users`, `/backoffice/content`, `/backoffice/settings` | Admin console for managing users and content |
-
-It currently runs on mock data in `starter-kit/lib/mock-data.ts` — swapping that for real Supabase calls is the next step, per [`13-TECH-STACK/TECH_STACK.md`](./13-TECH-STACK/TECH_STACK.md) and [`03-INSTRUCTION/DATABASE_SPEC.md`](./03-INSTRUCTION/DATABASE_SPEC.md). See [`starter-kit/README.md`](./starter-kit/README.md) for setup.
-
-## Repository Structure
+## 🗂️ Repository Structure
 
 ```
 THE SHIP METHOD OS/
-├── README.md                         You are here
-├── START-HERE.md                     10-minute orientation + quick-start path
-├── LICENSE.md
-├── CHANGELOG.md
+├── ship-cli/              npx ship-create — the scaffolder (published to npm)
+├── starter-kit/           Working Next.js app shell (sale, member, backoffice)
 │
-├── 01-STRUCTURE/                     S — business goals, requirements, scope, priorities
-│   ├── PROJECT.md
-│   ├── BUSINESS_MODEL.md
-│   └── FEATURE_MATRIX.md
+├── 01-STRUCTURE/          S — business goals, requirements, scope
+├── 02-HUMAN-FLOW/         H — user journeys, screens, UX flows
+├── 03-INSTRUCTION/        I — AI specs, prompts, implementation plans
+├── 04-PUBLISH/            P — launch, QA, analytics, feedback
 │
-├── 02-HUMAN-FLOW/                    H — journeys, flows, screens, UX
-│   ├── HUMAN_FLOW.md
-│   ├── USER_JOURNEY.md
-│   └── INFORMATION_ARCHITECTURE.md
-│
-├── 03-INSTRUCTION/                   I — AI specs, prompts, implementation plans
-│   ├── AI_BUILD_SPEC.md
-│   ├── TECH_SPEC.md
-│   ├── DATABASE_SPEC.md
-│   └── PROMPTS.md                    Idea → Product Spec → UX Spec → Tech Spec → Build Plan → Code Gen
-│
-├── 04-PUBLISH/                       P — launch, feedback, iteration, scaling
-│   ├── QA_CHECKLIST.md
-│   ├── SEO_CHECKLIST.md
-│   ├── ANALYTICS.md
-│   └── LAUNCH_PLAN.md
-│
-├── 05-SOP/                           Repeatable operating procedures
-│   ├── MVP_BUILD.md
-│   ├── VALIDATING_IDEA.md
-│   ├── USER_TESTING.md
-│   ├── SHIPPING_V1.md
-│   ├── FEEDBACK_LOOP.md
-│   └── IMPROVING_PRODUCT.md
-│
-├── 06-TEMPLATES/                     Product-type starter packs
-│   ├── CRM_TEMPLATE.md
-│   ├── MEMBERSHIP_TEMPLATE.md
-│   ├── DIRECTORY_TEMPLATE.md
-│   ├── LEADGEN_TEMPLATE.md
-│   ├── DASHBOARD_TEMPLATE.md
-│   ├── SAAS_TEMPLATE.md
-│   ├── INTERNAL_TOOL_TEMPLATE.md
-│   └── MARKETPLACE_TEMPLATE.md
-│
-├── 07-PROMPTS/                       Role-based prompt libraries
-│   ├── PRODUCT_PROMPTS.md
-│   ├── UX_PROMPTS.md
-│   ├── DEV_PROMPTS.md
-│   ├── MARKETING_PROMPTS.md
-│   └── SHIP_GPT_PROMPTS.md           Persona prompts: Custom GPT / Claude Project / Gemini Gem
-│
-├── 08-EXAMPLES/                      Worked end-to-end examples
-│   ├── CRM_EXAMPLE/
-│   ├── LEADGEN_EXAMPLE/
-│   ├── MEMBERSHIP_EXAMPLE/
-│   └── DIRECTORY_EXAMPLE/
-│
-├── 09-CASE-STUDIES/                  Narrative case studies
-│   ├── CASE_01.md
-│   └── CASE_02.md
-│
-├── 10-LAUNCH/                        Technical launch guides
-│   ├── DEPLOY_TO_VERCEL.md
-│   ├── DOMAIN_SETUP.md
-│   └── ANALYTICS_SETUP.md
-│
-├── 11-STANDARDS/                     Repo conventions
-│   ├── FOLDER_NAMING_STANDARDS.md
-│   ├── DOCUMENTATION_STANDARDS.md
-│   ├── VERSIONING_STANDARDS.md
-│   ├── PROMPT_STANDARDS.md
-│   ├── KNOWLEDGE_BASE_STANDARDS.md
-│   └── CONTEXT_MANAGEMENT_STANDARDS.md
-│
-├── 12-DESIGN-SYSTEM/                 Design system for AI-built UI
-│   ├── DESIGN_SYSTEM.md
-│   ├── UI_COMPONENT_SPEC.md
-│   └── DESIGN_TO_AI_PROMPTS.md
-│
-└── 13-TECH-STACK/                    Stack selection for non-developers
-    ├── TECH_STACK.md
-    ├── STACK_DECISION_MATRIX.md
-    └── AI_STACK_PROMPTS.md
+├── 05-SOP/                Repeatable operating procedures
+├── 06-TEMPLATES/          Product-type starter packs (SaaS, CRM, Membership…)
+├── 07-PROMPTS/            Role-based prompt libraries
+├── 08-EXAMPLES/           Worked end-to-end examples
+├── 09-CASE-STUDIES/       Narrative case studies
+├── 10-LAUNCH/             Deploy guides — Vercel, domain, analytics
+├── 11-STANDARDS/          Repo conventions — naming, versioning, prompts
+├── 12-DESIGN-SYSTEM/      Design system for AI-built UI
+└── 13-TECH-STACK/         Stack selection for non-developers
 ```
 
-## Core Philosophy
+---
+
+## 🧱 Core Philosophy
 
 > **Structure before Flow. Flow before Instruction. Instruction before code. Code before launch.**
 
 Every file in this repository exists to enforce that ordering. Skipping a phase is the #1 reason AI-built products end up broken, scope-creeped, or unshippable.
 
-## License
+---
 
-See [`LICENSE.md`](./LICENSE.md). This is a commercial product — see license terms before redistributing.
+## 📄 License
+
+See [`LICENSE.md`](./LICENSE.md). Commercial product — see license terms before redistributing.
 
 ---
 
-*The SHIP Method OS — v1.0*
+<p align="center">Built with ❤️ — <a href="https://www.npmjs.com/package/ship-create">npm install ship-create</a></p>
